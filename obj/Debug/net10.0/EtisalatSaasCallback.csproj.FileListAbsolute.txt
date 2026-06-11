@@ -57,3 +57,11 @@ D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\EtisalatSaasCallback.pdb
 D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\EtisalatSaasCallback.genruntimeconfig.cache
 D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\ref\EtisalatSaasCallback.dll
 D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\EtisalatSaasCallback.sourcelink.json
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\ClosedXML.dll
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\ClosedXML.Parser.dll
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\DocumentFormat.OpenXml.dll
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\DocumentFormat.OpenXml.Framework.dll
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\ExcelNumberFormat.dll
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\RBush.dll
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\SixLabors.Fonts.dll
+D:\RD\Projects\EtisalatSaasCallback\bin\Debug\net10.0\System.IO.Packaging.dll

@@ -10,24 +10,26 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Etisalat SaaS Monitor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --border: #334155;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
+            --primary: #1d6fdb;
+            --primary-dark: #1657b0;
+            --bg-page: #eef2f7;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-muted: #64748b;
             --danger: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-dark);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-page);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -35,6 +37,7 @@
             padding: 20px;
             position: relative;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         body::before {
@@ -44,8 +47,8 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle at 30% 30%, rgba(99,102,241,0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 70%, rgba(139,92,246,0.1) 0%, transparent 50%);
+            background: radial-gradient(circle at 30% 30%, rgba(29,111,219,0.10) 0%, transparent 45%),
+                        radial-gradient(circle at 70% 70%, rgba(16,185,129,0.08) 0%, transparent 45%);
             animation: rotate 30s linear infinite;
         }
 
@@ -61,7 +64,7 @@
             width: 100%;
             max-width: 420px;
             border: 1px solid var(--border);
-            box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 70px rgba(15,23,42,0.12);
             position: relative;
             z-index: 1;
         }
@@ -72,25 +75,27 @@
         }
 
         .logo {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: 20px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
-            font-weight: 700;
-            font-size: 24px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
             color: white;
-            box-shadow: 0 10px 40px rgba(99,102,241,0.4);
+            box-shadow: 0 12px 32px rgba(29,111,219,0.35);
         }
 
         .login-header h1 {
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text);
             margin-bottom: 8px;
+            letter-spacing: -0.4px;
         }
 
         .login-header p {
@@ -107,13 +112,13 @@
             margin-bottom: 10px;
             color: var(--text-muted);
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .form-control {
             width: 100%;
             padding: 14px 18px;
-            background: var(--bg-dark);
+            background: #f8fafc;
             border: 1px solid var(--border);
             border-radius: 12px;
             color: var(--text);
@@ -125,11 +130,12 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(99,102,241,0.2);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(29,111,219,0.15);
         }
 
         .form-control::placeholder {
-            color: #475569;
+            color: #94a3b8;
         }
 
         .remember-row {
@@ -165,15 +171,16 @@
             border-radius: 12px;
             color: white;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             font-family: inherit;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(29,111,219,0.3);
         }
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(99,102,241,0.4);
+            box-shadow: 0 14px 36px rgba(29,111,219,0.4);
         }
 
         .btn-login:active {
@@ -181,9 +188,9 @@
         }
 
         .error-message {
-            background: rgba(239,68,68,0.15);
+            background: rgba(239,68,68,0.08);
             border: 1px solid rgba(239,68,68,0.3);
-            color: #fca5a5;
+            color: #b91c1c;
             padding: 14px 18px;
             border-radius: 12px;
             margin-bottom: 24px;
@@ -194,7 +201,7 @@
         }
 
         .validation-error {
-            color: #fca5a5;
+            color: #dc2626;
             font-size: 13px;
             margin-top: 8px;
         }
@@ -210,7 +217,7 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <div class="logo">ET</div>
+            <div class="logo">Serviceme -RD</div>
             <h1>Welcome Back</h1>
             <p>Sign in to Etisalat SaaS Monitor</p>
         </div>
@@ -249,7 +256,7 @@
             <button type="submit" class="btn-login">Sign In</button>
         </form>
 
-        <p class="footer-text">Etisalat XaaS Integration Platform</p>
+        <p class="footer-text">Serviceme XaaS Integration Monitoring Platform</p>
     </div>
 </body>
 </html>

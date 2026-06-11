@@ -78,6 +78,9 @@ public class TrackedTicket
     [BsonElement("callbackResponseDescription")]
     public string? CallbackResponseDescription { get; set; }
 
+    [BsonElement("callbackReason")]
+    public string? CallbackReason { get; set; }
+
     [BsonElement("ticketCreatedDate")]
     public DateTime TicketCreatedDate { get; set; }
 

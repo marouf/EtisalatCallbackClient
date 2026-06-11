@@ -1,0 +1,141 @@
+@model TrackedTicket
+@{
+    ViewData["Title"] = "Edit Ticket";
+    var callbackSuccess = Model.CallbackSent && Model.CallbackResponseCode == "0";
+}
+
+<div class="page-header">
+    <div class="d-flex align-center gap-3">
+        <a asp-action="TicketDetails" asp-route-id="@Model.Id" class="btn btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+        </a>
+        <div>
+            <h1 class="page-title">Edit @Model.TicketNumber</h1>
+            <p class="page-subtitle">Update ticket data and resend the callback</p>
+        </div>
+    </div>
+    <span class="status-pill status-@Model.CurrentStatus.ToString().ToLower()" style="font-size: 14px; padding: 8px 16px;">
+        @Model.CurrentStatus
+    </span>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div>
+        <form asp-action="EditTicket" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <div class="card mb-4">
+                <div class="card-header"><span>Ticket Information</span></div>
+                <div class="card-body">
+                    <div class="details-grid">
+                        <div class="form-group">
+                            <label>Reference Number</label>
+                            <input type="text" name="referenceNumber" class="form-control" style="width:100%;" value="@Model.ReferenceNumber" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Subscription ID</label>
+                            <input type="text" name="subscriptionId" class="form-control" style="width:100%;" value="@Model.SubscriptionId" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Account ID</label>
+                            <input type="text" name="accountId" class="form-control" style="width:100%;" value="@Model.AccountId" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Plan ID</label>
+                            <input type="text" name="planId" class="form-control" style="width:100%;" value="@Model.PlanId" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Product</label>
+                            <input type="text" name="product" class="form-control" style="width:100%;" value="@Model.Product" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" name="quantity" class="form-control" style="width:100%;" value="@Model.Quantity" placeholder="—" />
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 4px;">
+                        <label>Subject</label>
+                        <input type="text" name="subject" class="form-control" style="width:100%;" value="@Model.Subject" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><span>Customer Information</span></div>
+                <div class="card-body">
+                    <div class="details-grid">
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" name="companyName" class="form-control" style="width:100%;" value="@Model.CompanyName" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Customer Name</label>
+                            <input type="text" name="customerName" class="form-control" style="width:100%;" value="@Model.CustomerName" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="customerEmail" class="form-control" style="width:100%;" value="@Model.CustomerEmail" placeholder="—" />
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="customerPhone" class="form-control" style="width:100%;" value="@Model.CustomerPhone" placeholder="—" />
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2" style="margin-top: 8px;">
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save Changes
+                        </button>
+                        <a asp-action="TicketDetails" asp-route-id="@Model.Id" class="btn btn-ghost">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div>
+        <div class="card" style="position: sticky; top: 96px;">
+            <div class="card-header">
+                <span>Resend Callback</span>
+                @if (Model.CallbackSent)
+                {
+                    <span class="callback-badge @(callbackSuccess ? "callback-sent" : "callback-pending")">@Model.CallbackAction</span>
+                }
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3" style="font-size: 13px;">
+                    @if (Model.CallbackSent)
+                    {
+                        <text>Last sent <strong>@Model.CallbackAction</strong> on @Model.CallbackSentAt?.ToString("yyyy-MM-dd HH:mm:ss") (code @(Model.CallbackResponseCode ?? "—")). Resending will send a new callback to Etisalat.</text>
+                    }
+                    else
+                    {
+                        <text>No callback has been sent yet. Save your changes first, then send the callback.</text>
+                    }
+                </p>
+
+                <form asp-action="SendCallback" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ticketId" value="@Model.Id" />
+                    <div class="form-group">
+                        <label>Reference Number @if (string.IsNullOrEmpty(Model.ReferenceNumber)) { <span style="color: var(--danger);">*</span> }</label>
+                        <input type="text" name="referenceNumber" class="form-control" style="width:100%;" value="@Model.ReferenceNumber" placeholder="Enter reference number" @(string.IsNullOrEmpty(Model.ReferenceNumber) ? "required" : "") />
+                        <small class="text-muted" style="display:block; margin-top:6px; font-size:12px;">Save data changes above first — the reference number used here is taken from this field.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Reason (optional)</label>
+                        <input type="text" name="reason" class="form-control" style="width:100%;" value="@Model.CallbackReason" placeholder="Enter reason for this action" />
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" name="action" value="ACCEPTED" class="btn btn-success" style="flex: 1;" onclick="return confirm('Send ACCEPTED callback to Etisalat?');">ACCEPTED</button>
+                        <button type="submit" name="action" value="REJECTED" class="btn btn-warning" style="flex: 1;" onclick="return confirm('Send REJECTED callback to Etisalat?');">REJECTED</button>
+                        <button type="submit" name="action" value="EXPIRED" class="btn btn-danger" style="flex: 1;" onclick="return confirm('Send EXPIRED callback to Etisalat?');">EXPIRED</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

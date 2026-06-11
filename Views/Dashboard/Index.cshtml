@@ -14,34 +14,46 @@
 </div>
 
 <div class="stats-grid">
-    <div class="stat-card primary">
+    <a asp-action="Monitor" class="stat-card primary">
         <div class="icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         </div>
         <div class="label">Total Tracked</div>
         <div class="value">@ViewBag.Total</div>
-    </div>
-    <div class="stat-card warning">
+        <div class="trend text-muted">View all tickets &rarr;</div>
+    </a>
+    <a asp-action="Monitor" asp-route-callback="false" class="stat-card warning">
         <div class="icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div class="label">Pending Callback</div>
         <div class="value">@ViewBag.Pending</div>
-    </div>
-    <div class="stat-card success">
+        <div class="trend text-muted">View pending &rarr;</div>
+    </a>
+    <a asp-action="Monitor" asp-route-callback="true" class="stat-card success">
         <div class="icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
-        <div class="label">Callback Sent</div>
-        <div class="value">@ViewBag.CallbackSent</div>
-    </div>
-    <div class="stat-card danger">
+        <div class="label">Successful Callbacks</div>
+        <div class="value">@ViewBag.CallbackSuccess</div>
+        <div class="trend text-muted">View successful &rarr;</div>
+    </a>
+    <a asp-action="Monitor" asp-route-callback="failed" class="stat-card danger">
         <div class="icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </div>
+        <div class="label">Failed Callbacks</div>
+        <div class="value">@ViewBag.CallbackFailed</div>
+        <div class="trend text-muted">View failed &rarr;</div>
+    </a>
+    <a asp-action="Monitor" asp-route-status="Closed" class="stat-card primary">
+        <div class="icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 12 11 14 15 10"/></svg>
         </div>
         <div class="label">Closed Tickets</div>
         <div class="value">@ViewBag.Closed</div>
-    </div>
+        <div class="trend text-muted">View closed &rarr;</div>
+    </a>
 </div>
 
 <div class="card">
@@ -77,6 +89,69 @@
     </div>
 </div>
 
+@{
+    var recentTickets = ViewBag.RecentTickets as List<TrackedTicket> ?? new List<TrackedTicket>();
+}
+<div class="table-container mt-4">
+    <div class="card-header">
+        <span>Recently Created Tickets</span>
+        <a asp-action="Monitor" class="link" style="font-size: 13px;">View all &rarr;</a>
+    </div>
+    <table style="table-layout: fixed; width: 100%;">
+        <thead>
+            <tr>
+                <th style="width: 140px;">Ticket #</th>
+                <th>Subject</th>
+                <th style="width: 130px;">Status</th>
+                <th style="width: 100px;">Callback</th>
+                <th style="width: 170px;">Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (recentTickets.Count == 0)
+            {
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <h3>No tickets yet</h3>
+                            <p>Created tickets will appear here.</p>
+                        </div>
+                    </td>
+                </tr>
+            }
+            @foreach (var ticket in recentTickets)
+            {
+                var isSuccess = ticket.CallbackSent && ticket.CallbackResponseCode == "0";
+                var isFailed = ticket.CallbackSent && ticket.CallbackResponseCode != "0";
+                <tr>
+                    <td>
+                        <a asp-action="TicketDetails" asp-route-id="@ticket.Id" class="link" style="font-weight: 500;">@ticket.TicketNumber</a>
+                    </td>
+                    <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@ticket.Subject">@ticket.Subject</td>
+                    <td>
+                        <span class="status-pill status-@ticket.CurrentStatus.ToString().ToLower()">@ticket.CurrentStatus</span>
+                    </td>
+                    <td>
+                        @if (isSuccess)
+                        {
+                            <span class="callback-badge callback-sent">@ticket.CallbackAction</span>
+                        }
+                        else if (isFailed)
+                        {
+                            <span class="callback-badge callback-failed" style="background: rgba(239,68,68,0.14); color: #dc2626;">Failed</span>
+                        }
+                        else
+                        {
+                            <span class="callback-badge callback-pending">Pending</span>
+                        }
+                    </td>
+                    <td class="text-muted">@ticket.TicketCreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
 <div class="d-flex gap-3 mt-4">
     <a asp-action="Monitor" class="btn btn-primary btn-lg">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -93,4 +168,12 @@
         0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
         50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(16,185,129,0); }
     }
+
+    a.stat-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+    }
+    a.stat-card .trend { font-size: 12px; font-weight: 600; }
 </style>

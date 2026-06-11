@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Text;
+using ClosedXML.Excel;
 using EtisalatSaasCallback.Configuration;
 using EtisalatSaasCallback.Models;
 using EtisalatSaasCallback.Services;
@@ -37,22 +40,59 @@ public class DashboardController : Controller
     {
         var total = await _trackedCollection.CountDocumentsAsync(FilterDefinition<TrackedTicket>.Empty);
         var pending = await _trackedCollection.CountDocumentsAsync(t => !t.CallbackSent);
-        var callbackSent = await _trackedCollection.CountDocumentsAsync(t => t.CallbackSent);
+        var callbackSuccess = await _trackedCollection.CountDocumentsAsync(t => t.CallbackSent && t.CallbackResponseCode == "0");
+        var callbackFailed = await _trackedCollection.CountDocumentsAsync(t => t.CallbackSent && t.CallbackResponseCode != "0");
         var closed = await _trackedCollection.CountDocumentsAsync(t => t.CurrentStatus == TicketStatus.Closed);
 
         ViewBag.Total = total;
         ViewBag.Pending = pending;
-        ViewBag.CallbackSent = callbackSent;
+        ViewBag.CallbackSuccess = callbackSuccess;
+        ViewBag.CallbackFailed = callbackFailed;
         ViewBag.Closed = closed;
         ViewBag.MonitorEnabled = _monitorSettings.Enabled;
         ViewBag.PollingInterval = _monitorSettings.PollingIntervalSeconds;
 
+        var recentTickets = await _trackedCollection
+            .Find(FilterDefinition<TrackedTicket>.Empty)
+            .SortByDescending(t => t.TicketCreatedDate)
+            .Limit(10)
+            .ToListAsync();
+        ViewBag.RecentTickets = recentTickets;
+
         return View();
     }
 
-    public async Task<IActionResult> Monitor(int page = 1, string? status = null, string? callback = null, string? search = null)
+    public async Task<IActionResult> Monitor(int page = 1, string? status = null, string? callback = null, string? search = null,
+        string? dateRange = null, string? dateFrom = null, string? dateTo = null)
     {
         const int pageSize = 20;
+        var filter = BuildTicketFilter(status, callback, search, dateRange, dateFrom, dateTo);
+
+        var totalCount = await _trackedCollection.CountDocumentsAsync(filter);
+        var tickets = await _trackedCollection
+            .Find(filter)
+            .SortByDescending(t => t.TrackedAt)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync();
+
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+        ViewBag.TotalCount = totalCount;
+        ViewBag.StatusFilter = status;
+        ViewBag.CallbackFilter = callback;
+        ViewBag.SearchFilter = search;
+        ViewBag.DateRange = dateRange;
+        ViewBag.DateFrom = dateFrom;
+        ViewBag.DateTo = dateTo;
+
+        return View(tickets);
+    }
+
+    private static FilterDefinition<TrackedTicket> BuildTicketFilter(
+        string? status, string? callback, string? search,
+        string? dateRange = null, string? dateFrom = null, string? dateTo = null)
+    {
         var filterBuilder = Builders<TrackedTicket>.Filter;
         var filter = filterBuilder.Empty;
 
@@ -88,22 +128,167 @@ public class DashboardController : Controller
             }
         }
 
-        var totalCount = await _trackedCollection.CountDocumentsAsync(filter);
+        var (from, to) = ResolveDateRange(dateRange, dateFrom, dateTo);
+        if (from.HasValue)
+            filter &= filterBuilder.Gte(t => t.TicketCreatedDate, from.Value);
+        if (to.HasValue)
+            filter &= filterBuilder.Lte(t => t.TicketCreatedDate, to.Value);
+
+        return filter;
+    }
+
+    private static (DateTime? From, DateTime? To) ResolveDateRange(string? dateRange, string? dateFrom, string? dateTo)
+    {
+        var now = DateTime.UtcNow;
+        switch (dateRange)
+        {
+            case "today":
+                return (now.Date, null);
+            case "1day":
+                return (now.AddDays(-1), null);
+            case "2days":
+                return (now.AddDays(-2), null);
+            case "week":
+                return (now.AddDays(-7), null);
+            case "month":
+                return (now.AddMonths(-1), null);
+            case "custom":
+                DateTime? from = DateTime.TryParse(dateFrom, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var df)
+                    ? df.Date
+                    : null;
+                DateTime? to = DateTime.TryParse(dateTo, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt)
+                    ? dt.Date.AddDays(1).AddTicks(-1)
+                    : null;
+                return (from, to);
+            default:
+                return (null, null);
+        }
+    }
+
+    private static readonly (string Header, Func<TrackedTicket, object?> Value)[] ExportColumns =
+    {
+        ("Ticket #", t => t.TicketNumber),
+        ("Subject", t => t.Subject),
+        ("Reference No.", t => t.ReferenceNumber),
+        ("Subscription ID", t => t.SubscriptionId),
+        ("Account ID", t => t.AccountId),
+        ("Plan ID", t => t.PlanId),
+        ("Product", t => t.Product),
+        ("Quantity", t => t.Quantity),
+        ("Company", t => t.CompanyName),
+        ("Customer Name", t => t.CustomerName),
+        ("Customer Email", t => t.CustomerEmail),
+        ("Customer Phone", t => t.CustomerPhone),
+        ("Status", t => t.CurrentStatus.ToString()),
+        ("Tracked At (UTC)", t => t.TrackedAt),
+        ("Ticket Created (UTC)", t => t.TicketCreatedDate),
+        ("Callback Sent", t => t.CallbackSent ? "Yes" : "No"),
+        ("Callback Action", t => t.CallbackAction),
+        ("Callback Sent At (UTC)", t => t.CallbackSentAt),
+        ("Callback Response Code", t => t.CallbackResponseCode),
+        ("Callback Response", t => t.CallbackResponseDescription),
+        ("Reason", t => t.CallbackReason),
+    };
+
+    [HttpGet]
+    public async Task<IActionResult> Export(string format = "csv", string? status = null, string? callback = null, string? search = null,
+        string? dateRange = null, string? dateFrom = null, string? dateTo = null)
+    {
+        var filter = BuildTicketFilter(status, callback, search, dateRange, dateFrom, dateTo);
         var tickets = await _trackedCollection
             .Find(filter)
             .SortByDescending(t => t.TrackedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
             .ToListAsync();
 
-        ViewBag.CurrentPage = page;
-        ViewBag.TotalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-        ViewBag.TotalCount = totalCount;
-        ViewBag.StatusFilter = status;
-        ViewBag.CallbackFilter = callback;
-        ViewBag.SearchFilter = search;
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
 
-        return View(tickets);
+        if (string.Equals(format, "excel", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(format, "xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            var bytes = BuildExcel(tickets);
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"tickets_{timestamp}.xlsx");
+        }
+
+        var csv = BuildCsv(tickets);
+        // UTF-8 BOM so Excel opens accented characters correctly.
+        var csvBytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        return File(csvBytes, "text/csv", $"tickets_{timestamp}.csv");
+    }
+
+    private static string BuildCsv(List<TrackedTicket> tickets)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine(string.Join(",", ExportColumns.Select(c => CsvEscape(c.Header))));
+
+        foreach (var ticket in tickets)
+        {
+            sb.AppendLine(string.Join(",", ExportColumns.Select(c => CsvEscape(FormatValue(c.Value(ticket))))));
+        }
+
+        return sb.ToString();
+    }
+
+    private static string FormatValue(object? value) => value switch
+    {
+        null => "",
+        DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+        _ => value.ToString() ?? ""
+    };
+
+    private static string CsvEscape(string value)
+    {
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+        {
+            return "\"" + value.Replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
+    private static byte[] BuildExcel(List<TrackedTicket> tickets)
+    {
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("Tickets");
+
+        for (int col = 0; col < ExportColumns.Length; col++)
+        {
+            ws.Cell(1, col + 1).Value = ExportColumns[col].Header;
+        }
+
+        var headerRange = ws.Range(1, 1, 1, ExportColumns.Length);
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1d6fdb");
+        headerRange.Style.Font.FontColor = XLColor.White;
+
+        for (int row = 0; row < tickets.Count; row++)
+        {
+            for (int col = 0; col < ExportColumns.Length; col++)
+            {
+                var value = ExportColumns[col].Value(tickets[row]);
+                var cell = ws.Cell(row + 2, col + 1);
+                if (value is DateTime dt)
+                {
+                    cell.Value = dt;
+                    cell.Style.DateFormat.Format = "yyyy-mm-dd hh:mm:ss";
+                }
+                else if (value is int i)
+                {
+                    cell.Value = i;
+                }
+                else
+                {
+                    cell.Value = value?.ToString() ?? "";
+                }
+            }
+        }
+
+        ws.SheetView.FreezeRows(1);
+        ws.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
     }
 
     public async Task<IActionResult> SlaViolations(int page = 1, string? type = null)
@@ -174,6 +359,57 @@ public class DashboardController : Controller
         return View(ticket);
     }
 
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> EditTicket(string id)
+    {
+        var ticket = await _trackedCollection.Find(t => t.Id == id).FirstOrDefaultAsync();
+        if (ticket == null)
+            return NotFound();
+
+        return View(ticket);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditTicket(
+        string id, string? subject, string? referenceNumber, string? subscriptionId,
+        string? accountId, string? planId, string? product, int? quantity,
+        string? companyName, string? customerName, string? customerEmail, string? customerPhone)
+    {
+        var ticket = await _trackedCollection.Find(t => t.Id == id).FirstOrDefaultAsync();
+        if (ticket == null)
+        {
+            TempData["Error"] = "Ticket not found";
+            return RedirectToAction("Monitor");
+        }
+
+        static string? Clean(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();
+
+        var update = Builders<TrackedTicket>.Update
+            .Set(t => t.ReferenceNumber, Clean(referenceNumber))
+            .Set(t => t.SubscriptionId, Clean(subscriptionId))
+            .Set(t => t.AccountId, Clean(accountId))
+            .Set(t => t.PlanId, Clean(planId))
+            .Set(t => t.Product, Clean(product))
+            .Set(t => t.Quantity, quantity)
+            .Set(t => t.CompanyName, Clean(companyName))
+            .Set(t => t.CustomerName, Clean(customerName))
+            .Set(t => t.CustomerEmail, Clean(customerEmail))
+            .Set(t => t.CustomerPhone, Clean(customerPhone));
+
+        // Subject is required on the model — only overwrite when a value is supplied.
+        if (!string.IsNullOrWhiteSpace(subject))
+            update = update.Set(t => t.Subject, subject.Trim());
+
+        await _trackedCollection.UpdateOneAsync(t => t.Id == id, update);
+
+        _logger.LogInformation("Ticket {TicketNumber} edited by {User}", ticket.TicketNumber, User.Identity?.Name);
+        TempData["Success"] = $"Ticket {ticket.TicketNumber} updated successfully";
+        return RedirectToAction("EditTicket", new { id });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SendCallback(string ticketId, string action, string? reason, string? referenceNumber)
@@ -226,6 +462,7 @@ public class DashboardController : Controller
                 .Set(t => t.CallbackSent, true)
                 .Set(t => t.CallbackSentAt, DateTime.UtcNow)
                 .Set(t => t.CallbackAction, action)
+                .Set(t => t.CallbackReason, string.IsNullOrWhiteSpace(reason) ? null : reason.Trim())
                 .Set(t => t.CallbackResponseCode, response.ResponseCode)
                 .Set(t => t.CallbackResponseDescription, response.Description);
 

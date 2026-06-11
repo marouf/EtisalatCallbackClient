@@ -8,10 +8,26 @@
         <h1 class="page-title">Ticket Monitor</h1>
         <p class="page-subtitle">Track and manage subscription tickets</p>
     </div>
-    <a asp-action="Monitor" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 01.908-.417A6 6 0 118 2v1z"/><path d="M8 4.466V.534a.25.25 0 01.41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 018 4.466z"/></svg>
-        Refresh
-    </a>
+    <div class="d-flex gap-2">
+        <a asp-action="Export" asp-route-format="excel"
+           asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
+           asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo"
+           class="btn btn-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Excel
+        </a>
+        <a asp-action="Export" asp-route-format="csv"
+           asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
+           asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo"
+           class="btn btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+        </a>
+        <a asp-action="Monitor" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 01.908-.417A6 6 0 118 2v1z"/><path d="M8 4.466V.534a.25.25 0 01.41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 018 4.466z"/></svg>
+            Refresh
+        </a>
+    </div>
 </div>
 
 <form method="get" class="filters">
@@ -44,6 +60,23 @@
             <option value="false" selected="@(ViewBag.CallbackFilter == "false")">Pending</option>
             <option value="failed" selected="@(ViewBag.CallbackFilter == "failed")">Failed</option>
         </select>
+    </div>
+    <div class="filter-group">
+        <span class="filter-label">Created:</span>
+        <select name="dateRange" class="form-select" id="dateRange" onchange="toggleCustomDates()">
+            <option value="">Any time</option>
+            <option value="today" selected="@(ViewBag.DateRange == "today")">Today</option>
+            <option value="1day" selected="@(ViewBag.DateRange == "1day")">Last 1 day</option>
+            <option value="2days" selected="@(ViewBag.DateRange == "2days")">Last 2 days</option>
+            <option value="week" selected="@(ViewBag.DateRange == "week")">Last week</option>
+            <option value="month" selected="@(ViewBag.DateRange == "month")">Last month</option>
+            <option value="custom" selected="@(ViewBag.DateRange == "custom")">Custom…</option>
+        </select>
+    </div>
+    <div class="filter-group" id="customDates" style="display: @(ViewBag.DateRange == "custom" ? "flex" : "none");">
+        <input type="date" name="dateFrom" class="form-control" value="@ViewBag.DateFrom" title="From date" />
+        <span class="filter-label">to</span>
+        <input type="date" name="dateTo" class="form-control" value="@ViewBag.DateTo" title="To date" />
     </div>
     <button type="submit" class="btn btn-secondary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -166,20 +199,23 @@
             <div class="pagination">
                 <a class="page-link @(ViewBag.CurrentPage <= 1 ? "disabled" : "")"
                    asp-action="Monitor" asp-route-page="@(ViewBag.CurrentPage - 1)"
-                   asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter">
+                   asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
+                   asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo">
                     &larr; Previous
                 </a>
                 @for (int i = 1; i <= ViewBag.TotalPages; i++)
                 {
                     <a class="page-link @(i == ViewBag.CurrentPage ? "active" : "")"
                        asp-action="Monitor" asp-route-page="@i"
-                       asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter">
+                       asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
+                       asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo">
                         @i
                     </a>
                 }
                 <a class="page-link @(ViewBag.CurrentPage >= ViewBag.TotalPages ? "disabled" : "")"
                    asp-action="Monitor" asp-route-page="@(ViewBag.CurrentPage + 1)"
-                   asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter">
+                   asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
+                   asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo">
                     Next &rarr;
                 </a>
             </div>
@@ -222,6 +258,11 @@
 
 @section Scripts {
     <script>
+        function toggleCustomDates() {
+            const range = document.getElementById('dateRange').value;
+            document.getElementById('customDates').style.display = range === 'custom' ? 'flex' : 'none';
+        }
+
         function openCallbackModal(ticketId, ticketNumber) {
             document.getElementById('modalTicketId').value = ticketId;
             document.getElementById('modalTicketNumber').textContent = ticketNumber;

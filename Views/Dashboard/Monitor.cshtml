@@ -5,6 +5,18 @@
 
 <style>
     .table-container td { vertical-align: top; }
+    th .sort-link {
+        color: inherit;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    th .sort-link:hover { color: var(--primary); }
+    th .sort-arrow { font-size: 10px; opacity: 0.55; }
+    th .sort-link:hover .sort-arrow { opacity: 1; }
 </style>
 
 <div class="page-header">
@@ -199,6 +211,9 @@
                                 </span>
                             }
                         </td>
+                        <td class="text-muted" style="white-space: nowrap;">
+                            @ticket.TicketCreatedDate.ToString("yyyy-MM-dd HH:mm")
+                        </td>
                         <td>
                             @if (!ticket.CallbackSent || isFailed)
                             {
@@ -222,7 +237,8 @@
                 <a class="page-link @(ViewBag.CurrentPage <= 1 ? "disabled" : "")"
                    asp-action="Monitor" asp-route-page="@(ViewBag.CurrentPage - 1)"
                    asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
-                   asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo">
+                   asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo"
+                   asp-route-sort="@ViewBag.Sort" asp-route-dir="@ViewBag.Dir">
                     &larr; Previous
                 </a>
                 @for (int i = 1; i <= ViewBag.TotalPages; i++)
@@ -230,14 +246,16 @@
                     <a class="page-link @(i == ViewBag.CurrentPage ? "active" : "")"
                        asp-action="Monitor" asp-route-page="@i"
                        asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
-                       asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo">
+                       asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo"
+                       asp-route-sort="@ViewBag.Sort" asp-route-dir="@ViewBag.Dir">
                         @i
                     </a>
                 }
                 <a class="page-link @(ViewBag.CurrentPage >= ViewBag.TotalPages ? "disabled" : "")"
                    asp-action="Monitor" asp-route-page="@(ViewBag.CurrentPage + 1)"
                    asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter"
-                   asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo">
+                   asp-route-dateRange="@ViewBag.DateRange" asp-route-dateFrom="@ViewBag.DateFrom" asp-route-dateTo="@ViewBag.DateTo"
+                   asp-route-sort="@ViewBag.Sort" asp-route-dir="@ViewBag.Dir">
                     Next &rarr;
                 </a>
             </div>

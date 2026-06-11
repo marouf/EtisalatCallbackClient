@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Testing - Etisalat SaaS Callback API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --success: #10b981; --success-light: #34d399;
+            --warning: #f59e0b; --danger: #ef4444;
+            --bg-dark: #0f172a; --bg-card: #1e293b; --bg-card-hover: #334155;
+            --border: #334155; --text: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; }
+
+        .navbar {
+            background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
+            padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand { font-size: 18px; font-weight: 600; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .navbar-nav { display: flex; gap: 4px; list-style: none; }
+        .nav-link { color: var(--text-muted); text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-link.active { color: var(--text); background: var(--primary); }
+
+        .page-header { padding: 48px 32px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, transparent 100%); }
+        .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+        .page-header p { color: var(--text-muted); font-size: 18px; max-width: 600px; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 48px 32px; }
+
+        .config-panel { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); padding: 24px; margin-bottom: 32px; }
+        .config-panel h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .form-group { margin-bottom: 0; }
+        .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .summary-card { background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .summary-card .number { font-size: 32px; font-weight: 700; }
+        .summary-card .label { font-size: 13px; color: var(--text-muted); }
+        .summary-card.total .number { color: var(--primary-light); }
+        .summary-card.pass .number { color: var(--success-light); }
+        .summary-card.fail .number { color: #f87171; }
+        .summary-card.pending .number { color: var(--text-muted); }
+
+        .progress-bar { height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden; margin-bottom: 32px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--success) 0%, var(--success-light) 100%); transition: width 0.3s; }
+
+        .section { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; overflow: hidden; }
+        .section-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .section-header h2 { font-size: 18px; font-weight: 600; }
+        .section-body { padding: 0; }
+
+        .test-case { border-bottom: 1px solid var(--border); }
+        .test-case:last-child { border-bottom: none; }
+        .test-header { padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s; }
+        .test-header:hover { background: rgba(255,255,255,0.02); }
+        .test-id { background: var(--primary); color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 12px; font-family: 'JetBrains Mono', monospace; }
+        .test-title { flex: 1; font-weight: 500; font-size: 14px; }
+        .test-status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-pending { background: var(--bg-dark); color: var(--text-muted); }
+        .status-running { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .status-pass { background: rgba(16,185,129,0.2); color: var(--success-light); }
+        .status-fail { background: rgba(239,68,68,0.2); color: #f87171; }
+
+        .test-body { padding: 0 24px 24px; display: none; }
+        .test-body.expanded { display: block; }
+        .test-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .test-info-item h4 { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .test-info-item p { background: var(--bg-dark); padding: 10px 12px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; font-family: inherit; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-dark); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--primary); }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .response-box { background: #0d1117; color: #c9d1d9; padding: 16px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin-top: 16px; max-height: 250px; overflow: auto; border: 1px solid #30363d; }
+        .response-box.success { border-color: rgba(16,185,129,0.5); }
+        .response-box.error { border-color: rgba(239,68,68,0.5); }
+
+        .tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin: 2px; }
+        .tag-positive { background: rgba(16,185,129,0.2); color: var(--success-light); }
+        .tag-negative { background: rgba(239,68,68,0.2); color: #f87171; }
+        .tag-security { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .tag-boundary { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--bg-dark); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+
+        .footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+        @@media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .navbar-nav { display: none; }
+            .page-header, .container { padding: 24px 16px; }
+            .test-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="index.html">
+            <div class="logo">ET</div>
+            <span>Etisalat SaaS API</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link" href="index.html">Home</a></li>
+            <li><a class="nav-link" href="api-reference.html">API Reference</a></li>
+            <li><a class="nav-link" href="code-reference.html">Code</a></li>
+            <li><a class="nav-link" href="deployment-guide.html">Deployment</a></li>
+            <li><a class="nav-link active" href="qa-testing.html">QA Testing</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <h1>QA Testing Suite</h1>
+        <p>Interactive test cases for the Etisalat SaaS Callback API</p>
+    </div>
+
+    <div class="container">
+        <div class="config-panel">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                Test Configuration
+            </h3>
+            <div class="config-grid">
+                <div class="form-group">
+                    <label>Base URL</label>
+                    <input type="text" id="baseUrl" value="http://localhost:5000">
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" value="isv_user">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" value="isv_password">
+                </div>
+                <div class="form-group">
+                    <label>Actions</label>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="runAllTests()">Run All Tests</button>
+                        <button class="btn btn-secondary" onclick="resetAllTests()">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card total">
+                <div class="number" id="totalTests">21</div>
+                <div class="label">Total Tests</div>
+            </div>
+            <div class="summary-card pass">
+                <div class="number" id="passedTests">0</div>
+                <div class="label">Passed</div>
+            </div>
+            <div class="summary-card fail">
+                <div class="number" id="failedTests">0</div>
+                <div class="label">Failed</div>
+            </div>
+            <div class="summary-card pending">
+                <div class="number" id="pendingTests">21</div>
+                <div class="label">Pending</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success-light)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <h2>Health Check Tests</h2>
+            </div>
+            <div class="section-body">
+                <div class="test-case" id="tc-001">
+                    <div class="test-header" onclick="toggleTest('tc-001')">
+                        <div><span class="test-id">TC-001</span><span class="test-title">Basic Health Check - Returns Healthy</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>GET /api/health</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>200 OK, status: "healthy"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-positive">Positive</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-001')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-001">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+
+                <div class="test-case" id="tc-002">
+                    <div class="test-header" onclick="toggleTest('tc-002')">
+                        <div><span class="test-id">TC-002</span><span class="test-title">Detailed Health - MongoDB Connection</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>GET /api/health/detailed</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>200 OK, mongodb: "healthy"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-positive">Positive</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-002')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-002">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                <h2>Authentication Tests</h2>
+            </div>
+            <div class="section-body">
+                <div class="test-case" id="tc-003">
+                    <div class="test-header" onclick="toggleTest('tc-003')">
+                        <div><span class="test-id">TC-003</span><span class="test-title">Missing Auth Header - Returns 401</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>401 Unauthorized</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-negative">Negative</span><span class="tag tag-security">Security</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-003')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-003">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+
+                <div class="test-case" id="tc-004">
+                    <div class="test-header" onclick="toggleTest('tc-004')">
+                        <div><span class="test-id">TC-004</span><span class="test-title">Invalid Credentials - Returns 401</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>401 Unauthorized</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-negative">Negative</span><span class="tag tag-security">Security</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-004')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-004">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <h2>Callback Tests</h2>
+            </div>
+            <div class="section-body">
+                <div class="test-case" id="tc-005">
+                    <div class="test-header" onclick="toggleTest('tc-005')">
+                        <div><span class="test-id">TC-005</span><span class="test-title">ACCEPTED Action - Valid Request</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>responseCode: "0"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-positive">Positive</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-005')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-005">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+
+                <div class="test-case" id="tc-006">
+                    <div class="test-header" onclick="toggleTest('tc-006')">
+                        <div><span class="test-id">TC-006</span><span class="test-title">REJECTED Action - Valid Request</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>responseCode: "0"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-positive">Positive</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-006')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-006">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+
+                <div class="test-case" id="tc-007">
+                    <div class="test-header" onclick="toggleTest('tc-007')">
+                        <div><span class="test-id">TC-007</span><span class="test-title">EXPIRED Action - Valid Request</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>responseCode: "0"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-positive">Positive</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-007')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-007">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+
+                <div class="test-case" id="tc-008">
+                    <div class="test-header" onclick="toggleTest('tc-008')">
+                        <div><span class="test-id">TC-008</span><span class="test-title">Invalid Action - Returns Error 7</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>responseCode: "7"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-negative">Negative</span><span class="tag tag-boundary">Validation</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-008')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-008">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <h2>Validation Tests</h2>
+            </div>
+            <div class="section-body">
+                <div class="test-case" id="tc-009">
+                    <div class="test-header" onclick="toggleTest('tc-009')">
+                        <div><span class="test-id">TC-009</span><span class="test-title">Missing Reference Number</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>400 Bad Request, code: "3"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-negative">Negative</span><span class="tag tag-boundary">Validation</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-009')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-009">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+
+                <div class="test-case" id="tc-010">
+                    <div class="test-header" onclick="toggleTest('tc-010')">
+                        <div><span class="test-id">TC-010</span><span class="test-title">Invalid Billing Date Format</span></div>
+                        <span class="test-status status-pending">Pending</span>
+                    </div>
+                    <div class="test-body">
+                        <div class="test-info">
+                            <div class="test-info-item"><h4>Endpoint</h4><p>POST /rest/xaas/v1/isvProvisioningStatus</p></div>
+                            <div class="test-info-item"><h4>Expected</h4><p>400 Bad Request, code: "3"</p></div>
+                            <div class="test-info-item"><h4>Tags</h4><p><span class="tag tag-negative">Negative</span><span class="tag tag-boundary">Validation</span></p></div>
+                        </div>
+                        <div class="btn-group"><button class="btn btn-primary" onclick="runTest('tc-010')">Run Test</button></div>
+                        <div class="response-box" id="response-tc-010">Click "Run Test" to execute</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <h2>User Management Tests (Manual)</h2>
+            </div>
+            <div class="section-body" style="padding: 24px;">
+                <p style="color: var(--text-muted); margin-bottom: 20px;">These tests require manual execution through the UI. Login as admin to access /Users.</p>
+                <table>
+                    <thead><tr><th>Test ID</th><th>Steps</th><th>Expected Result</th></tr></thead>
+                    <tbody>
+                        <tr><td>TC-016</td><td>Login as admin → /Users → Create → Fill form → Submit</td><td>User created, shown in list</td></tr>
+                        <tr><td>TC-017</td><td>Login as admin → /Users → Edit user → Change role → Save</td><td>Role updated successfully</td></tr>
+                        <tr><td>TC-018</td><td>Login as admin → /Users → Change Password → Enter new password</td><td>Password changed, user can login with new password</td></tr>
+                        <tr><td>TC-019</td><td>Login as regular User → Navigate to /Users</td><td>Access denied or redirected</td></tr>
+                        <tr><td>TC-020</td><td>Login as admin → /Users → Try to delete own account</td><td>Error: "You cannot delete your own account"</td></tr>
+                        <tr><td>TC-021</td><td>Login as any user → /Account/ChangePassword → Enter current + new password</td><td>Password changed successfully</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                <h2>Test Summary Matrix</h2>
+            </div>
+            <div class="section-body" style="padding: 0;">
+                <table>
+                    <thead>
+                        <tr><th>Test ID</th><th>Category</th><th>Description</th><th>Type</th><th>Priority</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>TC-001</td><td>Health</td><td>Basic health check</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-002</td><td>Health</td><td>MongoDB connection</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-003</td><td>Auth</td><td>Missing auth header</td><td><span class="tag tag-negative">Negative</span></td><td>High</td></tr>
+                        <tr><td>TC-004</td><td>Auth</td><td>Invalid credentials</td><td><span class="tag tag-negative">Negative</span></td><td>High</td></tr>
+                        <tr><td>TC-005</td><td>Callback</td><td>ACCEPTED action</td><td><span class="tag tag-positive">Positive</span></td><td>Critical</td></tr>
+                        <tr><td>TC-006</td><td>Callback</td><td>REJECTED action</td><td><span class="tag tag-positive">Positive</span></td><td>Critical</td></tr>
+                        <tr><td>TC-007</td><td>Callback</td><td>EXPIRED action</td><td><span class="tag tag-positive">Positive</span></td><td>Critical</td></tr>
+                        <tr><td>TC-008</td><td>Callback</td><td>Invalid action</td><td><span class="tag tag-negative">Negative</span></td><td>High</td></tr>
+                        <tr><td>TC-009</td><td>Validation</td><td>Missing reference</td><td><span class="tag tag-negative">Negative</span></td><td>Medium</td></tr>
+                        <tr><td>TC-010</td><td>Validation</td><td>Invalid date</td><td><span class="tag tag-negative">Negative</span></td><td>Medium</td></tr>
+                        <tr><td>TC-011</td><td>Dashboard</td><td>Search by ticket #</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-012</td><td>Dashboard</td><td>Search by subject</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-013</td><td>Dashboard</td><td>Filter failed callbacks</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-014</td><td>Dashboard</td><td>Retry failed callback</td><td><span class="tag tag-positive">Positive</span></td><td>Critical</td></tr>
+                        <tr><td>TC-015</td><td>Dashboard</td><td>Fill reference number</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-016</td><td>Users</td><td>Admin creates new user</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-017</td><td>Users</td><td>Admin edits user role</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-018</td><td>Users</td><td>Admin resets user password</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                        <tr><td>TC-019</td><td>Users</td><td>Non-admin denied /Users access</td><td><span class="tag tag-negative">Negative</span></td><td>Critical</td></tr>
+                        <tr><td>TC-020</td><td>Users</td><td>Admin cannot delete self</td><td><span class="tag tag-negative">Negative</span></td><td>High</td></tr>
+                        <tr><td>TC-021</td><td>Users</td><td>User changes own password</td><td><span class="tag tag-positive">Positive</span></td><td>High</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Etisalat SaaS Callback API v1.0 | QA Testing Suite</p>
+    </footer>
+
+    <script>
+        const testConfigs = {
+            'tc-001': { method: 'GET', endpoint: '/api/health', noAuth: true, validate: (r, s) => s === 200 && r.status === 'healthy' },
+            'tc-002': { method: 'GET', endpoint: '/api/health/detailed', noAuth: true, validate: (r, s) => s === 200 },
+            'tc-003': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', noAuth: true, body: { isvProvisioningStatusRequest: { referenceNumber: 'REF001', subscriptionId: 'SUB001', action: 'ACCEPTED', billingDate: '20260609143000' }}, validate: (r, s) => s === 401 },
+            'tc-004': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', customAuth: 'invalid:credentials', body: { isvProvisioningStatusRequest: { referenceNumber: 'REF001', subscriptionId: 'SUB001', action: 'ACCEPTED', billingDate: '20260609143000' }}, validate: (r, s) => s === 401 },
+            'tc-005': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', body: { isvProvisioningStatusRequest: { referenceNumber: 'REF005', subscriptionId: 'SUB005', action: 'ACCEPTED', billingDate: '20260609143000', serviceAttribute: [] }}, validate: (r, s) => s === 200 && r.isvProvisioningStatusResponse?.responseCode === '0' },
+            'tc-006': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', body: { isvProvisioningStatusRequest: { referenceNumber: 'REF006', subscriptionId: 'SUB006', action: 'REJECTED', billingDate: '20260609143000', serviceAttribute: [] }}, validate: (r, s) => s === 200 && r.isvProvisioningStatusResponse?.responseCode === '0' },
+            'tc-007': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', body: { isvProvisioningStatusRequest: { referenceNumber: 'REF007', subscriptionId: 'SUB007', action: 'EXPIRED', billingDate: '20260609143000', serviceAttribute: [] }}, validate: (r, s) => s === 200 && r.isvProvisioningStatusResponse?.responseCode === '0' },
+            'tc-008': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', body: { isvProvisioningStatusRequest: { referenceNumber: 'REF008', subscriptionId: 'SUB008', action: 'INVALID', billingDate: '20260609143000', serviceAttribute: [] }}, validate: (r, s) => r.isvProvisioningStatusResponse?.responseCode === '7' },
+            'tc-009': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', body: { isvProvisioningStatusRequest: { subscriptionId: 'SUB009', action: 'ACCEPTED', billingDate: '20260609143000' }}, validate: (r, s) => s === 400 },
+            'tc-010': { method: 'POST', endpoint: '/rest/xaas/v1/isvProvisioningStatus', body: { isvProvisioningStatusRequest: { referenceNumber: 'REF010', subscriptionId: 'SUB010', action: 'ACCEPTED', billingDate: 'invalid' }}, validate: (r, s) => s === 400 }
+        };
+
+        let testResults = {};
+
+        function getConfig() {
+            return {
+                baseUrl: document.getElementById('baseUrl').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+        }
+
+        function getAuthHeader(config, customAuth) {
+            const credentials = customAuth || `${config.username}:${config.password}`;
+            return 'Basic ' + btoa(credentials);
+        }
+
+        function toggleTest(testId) {
+            document.querySelector(`#${testId} .test-body`).classList.toggle('expanded');
+        }
+
+        async function runTest(testId) {
+            const config = getConfig();
+            const testConfig = testConfigs[testId];
+            const responseBox = document.getElementById(`response-${testId}`);
+            const statusBadge = document.querySelector(`#${testId} .test-status`);
+
+            statusBadge.className = 'test-status status-running';
+            statusBadge.textContent = 'Running...';
+            responseBox.textContent = 'Executing test...';
+            responseBox.className = 'response-box';
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (!testConfig.noAuth) {
+                    headers['Authorization'] = getAuthHeader(config, testConfig.customAuth);
+                }
+
+                const fetchOptions = { method: testConfig.method, headers };
+                if (testConfig.body) fetchOptions.body = JSON.stringify(testConfig.body);
+
+                const response = await fetch(config.baseUrl + testConfig.endpoint, fetchOptions);
+                const status = response.status;
+                let data;
+                try { data = await response.json(); } catch { data = { raw: await response.text() }; }
+
+                const passed = testConfig.validate(data, status);
+                testResults[testId] = passed;
+
+                statusBadge.className = `test-status ${passed ? 'status-pass' : 'status-fail'}`;
+                statusBadge.textContent = passed ? 'PASS' : 'FAIL';
+                responseBox.className = `response-box ${passed ? 'success' : 'error'}`;
+                responseBox.textContent = `Status: ${status}\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                testResults[testId] = false;
+                statusBadge.className = 'test-status status-fail';
+                statusBadge.textContent = 'ERROR';
+                responseBox.className = 'response-box error';
+                responseBox.textContent = `Error: ${error.message}\n\nMake sure the API is running at ${config.baseUrl}`;
+            }
+
+            updateSummary();
+        }
+
+        async function runAllTests() {
+            for (const testId of Object.keys(testConfigs)) {
+                await runTest(testId);
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+
+        function resetAllTests() {
+            testResults = {};
+            Object.keys(testConfigs).forEach(testId => {
+                document.querySelector(`#${testId} .test-status`).className = 'test-status status-pending';
+                document.querySelector(`#${testId} .test-status`).textContent = 'Pending';
+                document.getElementById(`response-${testId}`).textContent = 'Click "Run Test" to execute';
+                document.getElementById(`response-${testId}`).className = 'response-box';
+            });
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const total = Object.keys(testConfigs).length;
+            const passed = Object.values(testResults).filter(r => r === true).length;
+            const failed = Object.values(testResults).filter(r => r === false).length;
+            const pending = total - passed - failed;
+
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+            document.getElementById('pendingTests').textContent = pending;
+            document.getElementById('progressBar').style.width = `${((passed + failed) / total) * 100}%`;
+        }
+
+        updateSummary();
+    </script>
+</body>
+</html>

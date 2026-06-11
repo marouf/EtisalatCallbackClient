@@ -1,0 +1,273 @@
+@model TrackedTicket
+@{
+    ViewData["Title"] = "Ticket Details";
+}
+
+<div class="page-header">
+    <div class="d-flex align-center gap-3">
+        <a asp-action="Monitor" class="btn btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+        </a>
+        <div>
+            <h1 class="page-title">@Model.TicketNumber</h1>
+            <p class="page-subtitle">@Model.Subject</p>
+        </div>
+    </div>
+    <span class="status-pill status-@Model.CurrentStatus.ToString().ToLower()" style="font-size: 14px; padding: 8px 16px;">
+        @Model.CurrentStatus
+    </span>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div>
+        <div class="card mb-4">
+            <div class="card-header">
+                <span>Ticket Information</span>
+            </div>
+            <div class="card-body">
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <label>Ticket Number</label>
+                        <div class="value">@Model.TicketNumber</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Reference Number</label>
+                        <div class="value">@(Model.ReferenceNumber ?? "—")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Subscription ID</label>
+                        <div class="value">@(Model.SubscriptionId ?? "—")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Account ID</label>
+                        <div class="value">@(Model.AccountId ?? "—")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Plan ID</label>
+                        <div class="value">@(Model.PlanId ?? "—")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Product</label>
+                        <div class="value">@(Model.Product ?? "—")</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Subject</label>
+                    <div style="background: var(--bg-dark); padding: 16px; border-radius: 10px; border: 1px solid var(--border);">
+                        @Model.Subject
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <span>Customer Information</span>
+            </div>
+            <div class="card-body">
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <label>Company Name</label>
+                        <div class="value">@(Model.CompanyName ?? "—")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Customer Name</label>
+                        <div class="value">@(Model.CustomerName ?? "—")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email</label>
+                        <div class="value">@(Model.CustomerEmail ?? "—")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone</label>
+                        <div class="value">@(Model.CustomerPhone ?? "—")</div>
+                    </div>
+                    @if (Model.Quantity.HasValue)
+                    {
+                        <div class="detail-item">
+                            <label>Quantity</label>
+                            <div class="value">@Model.Quantity</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span>Tracking Timeline</span>
+            </div>
+            <div class="card-body">
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <label>Tracked At</label>
+                        <div class="value">@Model.TrackedAt.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Last Checked</label>
+                        <div class="value">@Model.LastCheckedAt.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Ticket Created</label>
+                        <div class="value">@Model.TicketCreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                    </div>
+                    <div class="detail-item">
+                        <label>Ticket Modified</label>
+                        <div class="value">@(Model.TicketModifiedDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "—")</div>
+                    </div>
+                    @if (Model.StatusChangedAt.HasValue)
+                    {
+                        <div class="detail-item">
+                            <label>Status Changed At</label>
+                            <div class="value">@Model.StatusChangedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                        </div>
+                    }
+                    @if (Model.PreviousStatus.HasValue)
+                    {
+                        <div class="detail-item">
+                            <label>Previous Status</label>
+                            <div class="value">
+                                <span class="status-pill status-@Model.PreviousStatus.Value.ToString().ToLower()">
+                                    @Model.PreviousStatus.Value
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="card" style="position: sticky; top: 96px;">
+            <div class="card-header">
+                <span>Callback Status</span>
+                @if (Model.CallbackSent)
+                {
+                    <span class="callback-badge callback-sent">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        Sent
+                    </span>
+                }
+                else
+                {
+                    <span class="callback-badge callback-pending">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Pending
+                    </span>
+                }
+            </div>
+            <div class="card-body">
+                @{
+                    var callbackSuccess = Model.CallbackSent && Model.CallbackResponseCode == "0";
+                    var callbackFailed = Model.CallbackSent && Model.CallbackResponseCode != "0";
+                }
+                @if (Model.CallbackSent)
+                {
+                    <div class="detail-item mb-3">
+                        <label>Action Sent</label>
+                        <div class="value" style="font-size: 18px; font-weight: 600; color: @(callbackSuccess ? "var(--success-light)" : "var(--danger)");">@Model.CallbackAction</div>
+                    </div>
+                    <div class="detail-item mb-3">
+                        <label>Sent At</label>
+                        <div class="value">@Model.CallbackSentAt?.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                    </div>
+                    <div class="detail-item mb-3">
+                        <label>Response Code</label>
+                        <div class="value" style="@(callbackFailed ? "color: var(--danger);" : "")">@(Model.CallbackResponseCode ?? "—")</div>
+                    </div>
+                    <div class="detail-item mb-3">
+                        <label>Response Description</label>
+                        <div class="value">@(Model.CallbackResponseDescription ?? "—")</div>
+                    </div>
+
+                    @if (callbackFailed)
+                    {
+                        <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 16px; margin: 16px 0;">
+                            <div class="d-flex align-center gap-2 mb-2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <span style="font-weight: 500; color: var(--danger);">Callback Failed</span>
+                            </div>
+                            <p class="text-muted" style="font-size: 13px; margin: 0;">Previous callback attempt failed. You can retry below.</p>
+                        </div>
+
+                        <form asp-action="SendCallback" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ticketId" value="@Model.Id" />
+                            @if (string.IsNullOrEmpty(Model.ReferenceNumber))
+                            {
+                                <div class="form-group">
+                                    <label>Reference Number <span style="color: var(--danger);">*</span></label>
+                                    <input type="text" name="referenceNumber" class="form-control" placeholder="Enter reference number" style="width: 100%;" required />
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="hidden" name="referenceNumber" value="@Model.ReferenceNumber" />
+                            }
+                            <div class="form-group">
+                                <label>Reason (optional)</label>
+                                <input type="text" name="reason" class="form-control" placeholder="Enter reason" style="width: 100%;" />
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="submit" name="action" value="ACCEPTED" class="btn btn-success" style="flex: 1;">
+                                    ACCEPTED
+                                </button>
+                                <button type="submit" name="action" value="REJECTED" class="btn btn-warning" style="flex: 1;">
+                                    REJECTED
+                                </button>
+                                <button type="submit" name="action" value="EXPIRED" class="btn btn-danger" style="flex: 1;">
+                                    EXPIRED
+                                </button>
+                            </div>
+                        </form>
+                    }
+                }
+                else
+                {
+                    <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                        <div class="d-flex align-center gap-2 mb-2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--warning-light)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span style="font-weight: 500; color: var(--warning-light);">Awaiting Action</span>
+                        </div>
+                        <p class="text-muted" style="font-size: 13px; margin: 0;">Callback has not been sent yet. Choose an action below.</p>
+                    </div>
+
+                    <form asp-action="SendCallback" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticketId" value="@Model.Id" />
+                        @if (string.IsNullOrEmpty(Model.ReferenceNumber))
+                        {
+                            <div class="form-group">
+                                <label>Reference Number <span style="color: var(--danger);">*</span></label>
+                                <input type="text" name="referenceNumber" class="form-control" placeholder="Enter reference number" style="width: 100%;" required />
+                                <small class="text-muted" style="display: block; margin-top: 6px; font-size: 12px;">No reference number found. Please provide one to send callback.</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" name="referenceNumber" value="@Model.ReferenceNumber" />
+                        }
+                        <div class="form-group">
+                            <label>Reason (optional)</label>
+                            <input type="text" name="reason" class="form-control" placeholder="Enter reason" style="width: 100%;" />
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" name="action" value="ACCEPTED" class="btn btn-success" style="flex: 1;">
+                                ACCEPTED
+                            </button>
+                            <button type="submit" name="action" value="REJECTED" class="btn btn-warning" style="flex: 1;">
+                                REJECTED
+                            </button>
+                            <button type="submit" name="action" value="EXPIRED" class="btn btn-danger" style="flex: 1;">
+                                EXPIRED
+                            </button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

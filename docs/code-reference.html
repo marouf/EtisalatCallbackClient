@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Reference - Etisalat SaaS Callback API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --success: #10b981; --success-light: #34d399;
+            --warning: #f59e0b; --danger: #ef4444;
+            --bg-dark: #0f172a; --bg-card: #1e293b; --bg-card-hover: #334155;
+            --border: #334155; --text: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; }
+
+        .navbar {
+            background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
+            padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand { font-size: 18px; font-weight: 600; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .navbar-nav { display: flex; gap: 4px; list-style: none; }
+        .nav-link { color: var(--text-muted); text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-link.active { color: var(--text); background: var(--primary); }
+
+        .page-header { padding: 48px 32px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 100%); }
+        .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+        .page-header p { color: var(--text-muted); font-size: 18px; max-width: 600px; }
+
+        .layout { display: flex; min-height: calc(100vh - 64px); }
+        .sidebar { width: 280px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px; position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto; }
+        .sidebar h3 { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .sidebar-nav { list-style: none; margin-bottom: 24px; }
+        .sidebar-nav a { display: block; padding: 8px 12px; color: var(--text-muted); text-decoration: none; font-size: 14px; border-radius: 6px; transition: all 0.2s; }
+        .sidebar-nav a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .sidebar-nav a.active { color: var(--primary-light); background: rgba(99,102,241,0.1); }
+
+        .main-content { flex: 1; padding: 48px; max-width: 900px; }
+
+        .section { margin-bottom: 48px; }
+        .section h2 { font-size: 24px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .section h3 { font-size: 18px; font-weight: 600; margin: 24px 0 12px; color: var(--primary-light); }
+
+        .file-card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px; overflow: hidden; }
+        .file-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); }
+        .file-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .file-path { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text); }
+        .file-badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .badge-controller { background: rgba(99,102,241,0.2); color: var(--primary-light); }
+        .badge-service { background: rgba(16,185,129,0.2); color: var(--success-light); }
+        .badge-model { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .badge-config { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .file-body { padding: 20px; }
+
+        pre {
+            background: #0d1117; color: #c9d1d9; padding: 16px; border-radius: 8px;
+            overflow-x: auto; margin: 12px 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; line-height: 1.5; border: 1px solid #30363d;
+        }
+        .keyword { color: #ff7b72; }
+        .type { color: #79c0ff; }
+        .string { color: #a5d6ff; }
+        .comment { color: #8b949e; font-style: italic; }
+        .attr { color: #d2a8ff; }
+
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        th { background: var(--bg-dark); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+        td code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: var(--bg-dark); padding: 2px 6px; border-radius: 4px; }
+
+        .diagram { background: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 13px; white-space: pre; overflow-x: auto; text-align: center; line-height: 1.4; }
+
+        .alert { padding: 16px 20px; border-radius: 12px; margin: 20px 0; display: flex; align-items: flex-start; gap: 12px; }
+        .alert-info { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); }
+        .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+        .alert svg { flex-shrink: 0; margin-top: 2px; }
+
+        .footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+        @@media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-content { padding: 24px; }
+        }
+        @@media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .navbar-nav { display: none; }
+            .page-header { padding: 24px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="index.html">
+            <div class="logo">ET</div>
+            <span>Etisalat SaaS API</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link" href="index.html">Home</a></li>
+            <li><a class="nav-link" href="api-reference.html">API Reference</a></li>
+            <li><a class="nav-link active" href="code-reference.html">Code</a></li>
+            <li><a class="nav-link" href="deployment-guide.html">Deployment</a></li>
+            <li><a class="nav-link" href="qa-testing.html">QA Testing</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <h1>Code Reference</h1>
+        <p>Complete source code documentation for the Etisalat SaaS Callback Service</p>
+    </div>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <h3>Navigation</h3>
+            <ul class="sidebar-nav">
+                <li><a href="#overview">Project Overview</a></li>
+                <li><a href="#program">Program.cs</a></li>
+                <li><a href="#controllers">Controllers</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#models">Models</a></li>
+                <li><a href="#auth">Authentication</a></li>
+                <li><a href="#users">User Management</a></li>
+                <li><a href="#config">Configuration</a></li>
+                <li><a href="#docker">Docker</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <section id="overview" class="section">
+                <h2>Project Overview</h2>
+
+                <h3>Project Structure</h3>
+                <div class="diagram">
+EtisalatSaasCallback/
+├── Authentication/
+│   └── BasicAuthenticationHandler.cs
+├── Configuration/
+│   ├── EtisalatSettings.cs
+│   ├── MongoDbSettings.cs
+│   ├── SlaSettings.cs
+│   └── UiAuthSettings.cs
+├── Controllers/
+│   ├── AccountController.cs
+│   ├── CallbackController.cs
+│   ├── DashboardController.cs
+│   ├── HealthController.cs
+│   ├── MonitorController.cs
+│   └── UsersController.cs
+├── Models/
+│   ├── IsvProvisioningStatusRequest.cs
+│   ├── TrackedTicket.cs
+│   ├── ProvisioningRecord.cs
+│   └── User.cs
+├── Services/
+│   ├── EtisalatCallbackClient.cs
+│   ├── MongoDbService.cs
+│   ├── TicketMonitorService.cs
+│   ├── ProvisioningService.cs
+│   └── UserService.cs
+├── Views/
+│   ├── Account/
+│   ├── Dashboard/
+│   ├── Users/
+│   └── Shared/
+├── Program.cs
+├── Dockerfile
+└── docker-compose.yml
+                </div>
+
+                <h3>Technology Stack</h3>
+                <table>
+                    <thead><tr><th>Component</th><th>Technology</th><th>Version</th></tr></thead>
+                    <tbody>
+                        <tr><td>Runtime</td><td>.NET</td><td>10.0</td></tr>
+                        <tr><td>Web Framework</td><td>ASP.NET Core MVC</td><td>10.0</td></tr>
+                        <tr><td>Database</td><td>MongoDB</td><td>8.0 / Driver 3.0</td></tr>
+                        <tr><td>Logging</td><td>Serilog</td><td>9.0</td></tr>
+                        <tr><td>Resilience</td><td>Polly</td><td>8.4</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="program" class="section">
+                <h2>Program.cs - Entry Point</h2>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/></svg></div>
+                        <span class="file-path">Program.cs</span>
+                        <span class="file-badge badge-config">Entry Point</span>
+                    </div>
+                    <div class="file-body">
+                        <h3>Serilog Configuration</h3>
+                        <pre><span class="type">Log</span>.<span class="type">Logger</span> = <span class="keyword">new</span> <span class="type">LoggerConfiguration</span>()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(<span class="string">"logs/etisalat-saas-.log"</span>, rollingInterval: <span class="type">RollingInterval</span>.Day)
+    .CreateLogger();</pre>
+
+                        <h3>HTTP Client with Retry Policy</h3>
+                        <pre><span class="keyword">var</span> retryPolicy = <span class="type">HttpPolicyExtensions</span>
+    .HandleTransientHttpError()
+    .WaitAndRetryAsync(<span class="string">3</span>, retryAttempt =&gt;
+        <span class="type">TimeSpan</span>.FromSeconds(<span class="type">Math</span>.Pow(<span class="string">2</span>, retryAttempt)));
+
+builder.Services.AddHttpClient&lt;<span class="type">IEtisalatCallbackClient</span>, <span class="type">EtisalatCallbackClient</span>&gt;()
+    .AddPolicyHandler(retryPolicy);</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="controllers" class="section">
+                <h2>Controllers</h2>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                        <span class="file-path">Controllers/CallbackController.cs</span>
+                        <span class="file-badge badge-controller">Controller</span>
+                    </div>
+                    <div class="file-body">
+                        <pre>[<span class="attr">ApiController</span>]
+[<span class="attr">Route</span>(<span class="string">"rest/xaas/v1"</span>)]
+[<span class="attr">Produces</span>(<span class="string">"application/json"</span>)]
+<span class="keyword">public class</span> <span class="type">CallbackController</span> : <span class="type">ControllerBase</span>
+{
+    <span class="keyword">private readonly</span> <span class="type">IProvisioningService</span> _provisioningService;
+}</pre>
+
+                        <table>
+                            <thead><tr><th>Method</th><th>Route</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>POST</code></td><td>/rest/xaas/v1/isvProvisioningStatus</td><td>Receive inbound callback</td></tr>
+                                <tr><td><code>POST</code></td><td>/rest/xaas/v1/sendCallback</td><td>Send outbound callback</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                        <span class="file-path">Controllers/DashboardController.cs</span>
+                        <span class="file-badge badge-controller">Controller</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 12px;">MVC controller for the monitoring dashboard UI with ticket management and callback actions.</p>
+                        <table>
+                            <thead><tr><th>Action</th><th>Route</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td>Index</td><td>/Dashboard</td><td>Dashboard overview with stats</td></tr>
+                                <tr><td>Monitor</td><td>/Dashboard/Monitor</td><td>List tickets with search (ticket #, subject) and filters (status, callback, failed)</td></tr>
+                                <tr><td>SlaViolations</td><td>/Dashboard/SlaViolations</td><td>SLA violations list</td></tr>
+                                <tr><td>TicketDetails</td><td>/Dashboard/TicketDetails/{id}</td><td>Ticket details with retry on failed callbacks</td></tr>
+                                <tr><td>SendCallback</td><td>POST /Dashboard/SendCallback</td><td>Send/retry callback with optional reference number</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                        <span class="file-path">Controllers/AccountController.cs</span>
+                        <span class="file-badge badge-controller">Controller</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 12px;">Handles user authentication with cookie-based sessions.</p>
+                        <table>
+                            <thead><tr><th>Action</th><th>Route</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td>Login</td><td>/Account/Login</td><td>Login page and form handler</td></tr>
+                                <tr><td>Logout</td><td>POST /Account/Logout</td><td>Sign out and redirect to login</td></tr>
+                                <tr><td>ChangePassword</td><td>/Account/ChangePassword</td><td>Change own password (requires current password)</td></tr>
+                                <tr><td>AccessDenied</td><td>/Account/AccessDenied</td><td>Access denied page for unauthorized access</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                        <span class="file-path">Controllers/UsersController.cs</span>
+                        <span class="file-badge badge-controller">Controller</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 12px;">Admin-only user management for UI authentication. Requires <code>[Authorize(Roles = "Admin")]</code>.</p>
+                        <table>
+                            <thead><tr><th>Action</th><th>Route</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td>Index</td><td>/Users</td><td>List all users with status</td></tr>
+                                <tr><td>Create</td><td>/Users/Create</td><td>Create new user with role assignment</td></tr>
+                                <tr><td>Edit</td><td>/Users/Edit/{id}</td><td>Edit user details (cannot demote/deactivate self)</td></tr>
+                                <tr><td>ChangePassword</td><td>/Users/ChangePassword/{id}</td><td>Reset user password (admin override)</td></tr>
+                                <tr><td>Delete</td><td>POST /Users/Delete/{id}</td><td>Delete user (cannot delete self)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="services" class="section">
+                <h2>Services</h2>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
+                        <span class="file-path">Services/TicketMonitorService.cs</span>
+                        <span class="file-badge badge-service">Service</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 12px;">Background service that monitors the Ticket collection and auto-sends callbacks when tickets close.</p>
+                        <pre><span class="keyword">public class</span> <span class="type">TicketMonitorService</span> : <span class="type">BackgroundService</span>
+{
+    <span class="keyword">protected override async</span> <span class="type">Task</span> ExecuteAsync(<span class="type">CancellationToken</span> stoppingToken)
+    {
+        <span class="keyword">while</span> (!stoppingToken.IsCancellationRequested)
+        {
+            <span class="keyword">await</span> DiscoverNewTicketsAsync();
+            <span class="keyword">await</span> CheckTicketStatusChangesAsync();
+            <span class="keyword">await</span> <span class="type">Task</span>.Delay(<span class="type">TimeSpan</span>.FromSeconds(_settings.PollingIntervalSeconds));
+        }
+    }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></div>
+                        <span class="file-path">Services/EtisalatCallbackClient.cs</span>
+                        <span class="file-badge badge-service">Service</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 12px;">HTTP client for outbound calls to Etisalat XaaS platform with retry policies.</p>
+                        <pre><span class="keyword">public interface</span> <span class="type">IEtisalatCallbackClient</span>
+{
+    <span class="type">Task</span>&lt;<span class="type">IsvProvisioningStatusResponse</span>&gt; SendProvisioningStatusAsync(
+        <span class="type">IsvProvisioningStatusRequest</span> request);
+}</pre>
+                    </div>
+                </div>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></div>
+                        <span class="file-path">Services/UserService.cs</span>
+                        <span class="file-badge badge-service">Service</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 12px;">User authentication and management with MongoDB storage. Uses SHA256 password hashing with salt.</p>
+                        <pre><span class="keyword">public interface</span> <span class="type">IUserService</span>
+{
+    <span class="type">Task</span>&lt;<span class="type">User</span>?&gt; ValidateUserAsync(<span class="keyword">string</span> username, <span class="keyword">string</span> password);
+    <span class="type">Task</span>&lt;<span class="type">User</span>?&gt; GetUserByIdAsync(<span class="keyword">string</span> id);
+    <span class="type">Task</span>&lt;<span class="type">List</span>&lt;<span class="type">User</span>&gt;&gt; GetAllUsersAsync();
+    <span class="type">Task</span>&lt;<span class="type">User</span>&gt; CreateUserAsync(<span class="type">User</span> user, <span class="keyword">string</span> password);
+    <span class="type">Task</span>&lt;<span class="keyword">bool</span>&gt; UpdateUserAsync(<span class="type">User</span> user);
+    <span class="type">Task</span>&lt;<span class="keyword">bool</span>&gt; ChangePasswordAsync(<span class="keyword">string</span> userId, <span class="keyword">string</span> newPassword);
+    <span class="type">Task</span>&lt;<span class="keyword">bool</span>&gt; DeleteUserAsync(<span class="keyword">string</span> userId);
+    <span class="type">Task</span> EnsureDefaultAdminAsync();
+}</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="models" class="section">
+                <h2>Data Models</h2>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                        <span class="file-path">Models/TrackedTicket.cs</span>
+                        <span class="file-badge badge-model">Model</span>
+                    </div>
+                    <div class="file-body">
+                        <pre><span class="keyword">public class</span> <span class="type">TrackedTicket</span>
+{
+    [<span class="attr">BsonId</span>]
+    [<span class="attr">BsonRepresentation</span>(<span class="type">BsonType</span>.ObjectId)]
+    <span class="keyword">public string</span> Id { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+
+    <span class="keyword">public string</span> TicketId { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public string</span> TicketNumber { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public string</span>? ReferenceNumber { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public</span> <span class="type">TicketStatus</span> CurrentStatus { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public bool</span> CallbackSent { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public string</span>? CallbackAction { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public</span> <span class="type">DateTime</span>? CallbackSentAt { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+}</pre>
+                    </div>
+                </div>
+
+                <h3>TicketStatus Enum</h3>
+                <table>
+                    <thead><tr><th>Value</th><th>Name</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>0</td><td>Open</td><td>Ticket is open</td></tr>
+                        <tr><td>1</td><td>InProgress</td><td>Being worked on</td></tr>
+                        <tr><td>3</td><td>Resolved</td><td>Issue resolved</td></tr>
+                        <tr><td>4</td><td>Closed</td><td>Ticket closed - triggers callback</td></tr>
+                        <tr><td>10</td><td>Rejected</td><td>Ticket rejected</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Error Codes</h3>
+                <pre><span class="keyword">public static class</span> <span class="type">ErrorCodes</span>
+{
+    <span class="keyword">public const string</span> Success = <span class="string">"0"</span>;
+    <span class="keyword">public const string</span> AuthenticationFailed = <span class="string">"1"</span>;
+    <span class="keyword">public const string</span> InputValidationError = <span class="string">"3"</span>;
+    <span class="keyword">public const string</span> InvalidAction = <span class="string">"7"</span>;
+    <span class="keyword">public const string</span> InternalError = <span class="string">"99"</span>;
+    <span class="keyword">public const string</span> AccountSuspendedCannotAccept = <span class="string">"100"</span>;
+    <span class="keyword">public const string</span> AccountCeasedNoCallback = <span class="string">"101"</span>;
+}</pre>
+            </section>
+
+            <section id="auth" class="section">
+                <h2>Authentication</h2>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+                        <span class="file-path">Authentication/BasicAuthenticationHandler.cs</span>
+                        <span class="file-badge badge-config">Security</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 16px;">Custom authentication handler for Basic Auth with Base64 encoded credentials.</p>
+
+                        <h3>Authentication Flow</h3>
+                        <div class="diagram">
+Request -> Extract Auth Header -> Decode Base64 -> Validate -> Success/Fail
+                   |
+           Format: "Basic {base64(user:pass)}"
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <div>
+                                <strong>Security Note:</strong> Enable IP whitelisting in production. Add Etisalat's IP addresses to the whitelist.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="users" class="section">
+                <h2>User Management</h2>
+
+                <div class="file-card">
+                    <div class="file-header">
+                        <div class="file-icon"><svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                        <span class="file-path">Models/User.cs</span>
+                        <span class="file-badge badge-model">Model</span>
+                    </div>
+                    <div class="file-body">
+                        <p style="color: var(--text-muted); margin-bottom: 12px;">User entity stored in <code>serviceme_users</code> collection. All fields use <code>serviceme_</code> prefix.</p>
+                        <pre><span class="keyword">public class</span> <span class="type">User</span>
+{
+    [<span class="attr">BsonId</span>]
+    [<span class="attr">BsonRepresentation</span>(<span class="type">BsonType</span>.ObjectId)]
+    <span class="keyword">public string</span>? Id { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+
+    [<span class="attr">BsonElement</span>(<span class="string">"serviceme_username"</span>)]
+    <span class="keyword">public string</span> Username { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+
+    [<span class="attr">BsonElement</span>(<span class="string">"serviceme_passwordHash"</span>)]
+    <span class="keyword">public string</span> PasswordHash { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+
+    [<span class="attr">BsonElement</span>(<span class="string">"serviceme_role"</span>)]
+    <span class="keyword">public</span> <span class="type">UserRole</span> Role { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+
+    [<span class="attr">BsonElement</span>(<span class="string">"serviceme_isActive"</span>)]
+    <span class="keyword">public bool</span> IsActive { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+}</pre>
+                    </div>
+                </div>
+
+                <h3>User Roles</h3>
+                <table>
+                    <thead><tr><th>Value</th><th>Role</th><th>Permissions</th></tr></thead>
+                    <tbody>
+                        <tr><td>0</td><td>User</td><td>View dashboard, monitor tickets, send callbacks</td></tr>
+                        <tr><td>1</td><td>Admin</td><td>All User permissions + User management</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Password Security</h3>
+                <div class="diagram">
+Password Storage Format: {salt}:{hash}
+
+Example: "abc123base64salt==:sha256HashOfSaltedPassword=="
+
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Generate  │    │   Combine   │    │   SHA256    │
+│    Salt     │ -> │ Salt + Pass │ -> │    Hash     │
+│  (16 bytes) │    │             │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘
+                </div>
+
+                <h3>View Models</h3>
+                <table>
+                    <thead><tr><th>Model</th><th>Used By</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>CreateUserViewModel</code></td><td>/Users/Create</td><td>New user with password + confirm</td></tr>
+                        <tr><td><code>EditUserViewModel</code></td><td>/Users/Edit</td><td>Update user details (no password)</td></tr>
+                        <tr><td><code>ChangePasswordViewModel</code></td><td>/Users/ChangePassword</td><td>Admin password reset</td></tr>
+                        <tr><td><code>MyProfileViewModel</code></td><td>/Account/ChangePassword</td><td>Self password change (requires current)</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-info">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <div>
+                        <strong>Default Admin:</strong> On first startup, a default admin is created from <code>UiAuth</code> settings. Change the password immediately in production.
+                    </div>
+                </div>
+            </section>
+
+            <section id="config" class="section">
+                <h2>Configuration</h2>
+
+                <h3>Environment Variables</h3>
+                <table>
+                    <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>MongoDbSettings__ConnectionString</code></td><td>MongoDB connection string</td></tr>
+                        <tr><td><code>Etisalat__Username</code></td><td>Etisalat API username</td></tr>
+                        <tr><td><code>Etisalat__Password</code></td><td>Etisalat API password</td></tr>
+                        <tr><td><code>Isv__EnableIpWhitelisting</code></td><td>Enable IP whitelist</td></tr>
+                        <tr><td><code>UiAuth__Username</code></td><td>Default admin username (created on first startup)</td></tr>
+                        <tr><td><code>UiAuth__Password</code></td><td>Default admin password (change after first login!)</td></tr>
+                        <tr><td><code>UiAuth__SessionTimeoutMinutes</code></td><td>Session timeout in minutes (default: 60)</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="docker" class="section">
+                <h2>Docker Configuration</h2>
+
+                <h3>Multi-Stage Build</h3>
+                <div class="diagram">
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│    BUILD    │    │   PUBLISH   │    │    FINAL    │
+│    SDK      │ -> │   Trimmed   │ -> │   Runtime   │
+│   Restore   │    │   Output    │    │   ~80MB     │
+└─────────────┘    └─────────────┘    └─────────────┘
+                </div>
+
+                <pre><span class="comment"># Build and run</span>
+docker-compose up -d --build
+
+<span class="comment"># View logs</span>
+docker-compose logs -f api
+
+<span class="comment"># Access services</span>
+<span class="comment"># API:          http://localhost:5000</span>
+<span class="comment"># Dashboard:    http://localhost:5000/Dashboard</span>
+<span class="comment"># Swagger:      http://localhost:5000/swagger</span></pre>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <p>Etisalat SaaS Callback API v1.0 | Built with .NET 10 and MongoDB</p>
+    </footer>
+</body>
+</html>

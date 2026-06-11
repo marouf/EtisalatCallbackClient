@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Guide - Etisalat SaaS Callback API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --success: #10b981; --success-light: #34d399;
+            --warning: #f59e0b; --danger: #ef4444;
+            --bg-dark: #0f172a; --bg-card: #1e293b; --bg-card-hover: #334155;
+            --border: #334155; --text: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; }
+
+        .navbar {
+            background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
+            padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand { font-size: 18px; font-weight: 600; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .navbar-nav { display: flex; gap: 4px; list-style: none; }
+        .nav-link { color: var(--text-muted); text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-link.active { color: var(--text); background: var(--primary); }
+
+        .page-header { padding: 48px 32px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, transparent 100%); }
+        .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+        .page-header p { color: var(--text-muted); font-size: 18px; max-width: 600px; }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 48px 32px; }
+
+        .section { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 32px; overflow: hidden; }
+        .section-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+        .section-header h2 { font-size: 20px; font-weight: 600; }
+        .section-body { padding: 24px; }
+
+        h3 { font-size: 16px; font-weight: 600; margin: 24px 0 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab { padding: 10px 20px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .tab:hover { color: var(--text); border-color: var(--primary); }
+        .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .step { display: flex; gap: 20px; margin: 24px 0; }
+        .step-num { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .step-content { flex: 1; }
+        .step-content strong { display: block; margin-bottom: 8px; font-size: 16px; }
+
+        pre {
+            background: #0d1117; color: #c9d1d9; padding: 16px; border-radius: 8px;
+            overflow-x: auto; margin: 12px 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; line-height: 1.5; border: 1px solid #30363d;
+        }
+        .comment { color: #8b949e; }
+
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        th { background: var(--bg-dark); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+
+        .alert { padding: 16px 20px; border-radius: 12px; margin: 20px 0; display: flex; align-items: flex-start; gap: 12px; }
+        .alert-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+        .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+        .alert svg { flex-shrink: 0; margin-top: 2px; }
+
+        .checklist { list-style: none; }
+        .checklist li { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .checklist li:last-child { border-bottom: none; }
+        .checklist input { width: 20px; height: 20px; accent-color: var(--success); }
+
+        .footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+        @@media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .navbar-nav { display: none; }
+            .page-header, .container { padding: 24px 16px; }
+            .step { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="index.html">
+            <div class="logo">ET</div>
+            <span>Etisalat SaaS API</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link" href="index.html">Home</a></li>
+            <li><a class="nav-link" href="api-reference.html">API Reference</a></li>
+            <li><a class="nav-link" href="code-reference.html">Code</a></li>
+            <li><a class="nav-link active" href="deployment-guide.html">Deployment</a></li>
+            <li><a class="nav-link" href="qa-testing.html">QA Testing</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <h1>Deployment Guide</h1>
+        <p>Step-by-step instructions for deploying the Etisalat SaaS Callback Service</p>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <h2>Prerequisites</h2>
+            </div>
+            <div class="section-body">
+                <table>
+                    <thead><tr><th>Component</th><th>Version</th><th>Purpose</th></tr></thead>
+                    <tbody>
+                        <tr><td>.NET SDK</td><td>10.0+</td><td>Application runtime</td></tr>
+                        <tr><td>MongoDB</td><td>8.0+</td><td>Database</td></tr>
+                        <tr><td>Docker</td><td>24.0+</td><td>Containerization (optional)</td></tr>
+                        <tr><td>Git</td><td>Any</td><td>Source control</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success-light)" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                <h2>Deployment Options</h2>
+            </div>
+            <div class="section-body">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('docker')">Docker Compose</button>
+                    <button class="tab" onclick="showTab('manual')">Manual</button>
+                    <button class="tab" onclick="showTab('linux')">Linux Server</button>
+                </div>
+
+                <div id="docker" class="tab-content active">
+                    <div class="alert alert-success">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success-light)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        <div><strong>Recommended:</strong> Easiest method - includes MongoDB automatically</div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Navigate to project directory</strong>
+                            <pre>cd /path/to/EtisalatSaasCallback</pre>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Build and start services</strong>
+                            <pre><span class="comment"># Build and run in detached mode</span>
+docker-compose up -d --build
+
+<span class="comment"># View logs</span>
+docker-compose logs -f api
+
+<span class="comment"># Check status</span>
+docker-compose ps</pre>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Verify deployment</strong>
+                            <pre><span class="comment"># Test health endpoint</span>
+curl http://localhost:5000/api/health
+
+<span class="comment"># Access services</span>
+<span class="comment"># API:          http://localhost:5000</span>
+<span class="comment"># Dashboard:    http://localhost:5000/Dashboard</span>
+<span class="comment"># Swagger:      http://localhost:5000/swagger</span>
+<span class="comment"># Mongo Express: http://localhost:8081</span></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="manual" class="tab-content">
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Install .NET 10 Runtime</strong>
+                            <pre>dotnet --version</pre>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Restore and build</strong>
+                            <pre>dotnet restore
+dotnet build -c Release
+dotnet publish -c Release -o ./publish</pre>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Run the application</strong>
+                            <pre>cd publish
+set ASPNETCORE_ENVIRONMENT=Production
+dotnet EtisalatSaasCallback.dll --urls "http://0.0.0.0:5000"</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="linux" class="tab-content">
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Install .NET Runtime</strong>
+                            <pre>sudo apt-get update
+sudo apt-get install -y aspnetcore-runtime-10.0</pre>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Create systemd service</strong>
+                            <pre>sudo tee /etc/systemd/system/etisalat-saas.service &lt;&lt; 'EOF'
+[Unit]
+Description=Etisalat SaaS Callback Service
+After=network.target mongodb.service
+
+[Service]
+WorkingDirectory=/var/www/etisalat-saas
+ExecStart=/usr/bin/dotnet EtisalatSaasCallback.dll
+Restart=always
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://localhost:5000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable etisalat-saas
+sudo systemctl start etisalat-saas</pre>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Configure Nginx reverse proxy</strong>
+                            <pre>sudo apt-get install -y nginx
+
+sudo tee /etc/nginx/sites-available/etisalat-saas &lt;&lt; 'EOF'
+server {
+    listen 80;
+    server_name api.yourdomain.com;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+EOF
+
+sudo ln -s /etc/nginx/sites-available/etisalat-saas /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <h2>Post-Deployment Checklist</h2>
+            </div>
+            <div class="section-body">
+                <ul class="checklist">
+                    <li><input type="checkbox"> Application starts without errors</li>
+                    <li><input type="checkbox"> Health endpoint returns "healthy"</li>
+                    <li><input type="checkbox"> MongoDB connection working</li>
+                    <li><input type="checkbox"> HTTPS enabled and working</li>
+                    <li><input type="checkbox"> Etisalat credentials configured</li>
+                    <li><input type="checkbox"> IP whitelisting enabled for production</li>
+                    <li><input type="checkbox"> Dashboard login working (default admin from UiAuth settings)</li>
+                    <li><input type="checkbox"> Default admin password changed</li>
+                    <li><input type="checkbox"> User management accessible (/Users - Admin only)</li>
+                    <li><input type="checkbox"> Ticket monitoring service running</li>
+                    <li><input type="checkbox"> Search by ticket # and subject working</li>
+                    <li><input type="checkbox"> Failed callback filter and retry working</li>
+                    <li><input type="checkbox"> Logs directory writable</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <h2>Troubleshooting</h2>
+            </div>
+            <div class="section-body">
+                <table>
+                    <thead><tr><th>Issue</th><th>Cause</th><th>Solution</th></tr></thead>
+                    <tbody>
+                        <tr><td>MongoDB connection failed</td><td>MongoDB not running</td><td>Check MongoDB service status</td></tr>
+                        <tr><td>401 Unauthorized</td><td>Invalid credentials</td><td>Check Base64 encoding of credentials</td></tr>
+                        <tr><td>403 Forbidden</td><td>IP not whitelisted</td><td>Add IP to WhitelistedIps</td></tr>
+                        <tr><td>Port already in use</td><td>Another process on port</td><td>Change port or stop process</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>View Logs</h3>
+                <pre><span class="comment"># Docker</span>
+docker-compose logs -f api
+
+<span class="comment"># Linux systemd</span>
+sudo journalctl -u etisalat-saas -f
+
+<span class="comment"># Application logs</span>
+tail -f logs/etisalat-saas-*.log</pre>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Etisalat SaaS Callback API v1.0 | Built with .NET 10 and MongoDB</p>
+    </footer>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

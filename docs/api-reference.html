@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - Etisalat SaaS Callback API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --success: #10b981; --success-light: #34d399;
+            --warning: #f59e0b; --danger: #ef4444;
+            --bg-dark: #0f172a; --bg-card: #1e293b; --bg-card-hover: #334155;
+            --border: #334155; --text: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; }
+
+        .navbar {
+            background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
+            padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand { font-size: 18px; font-weight: 600; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .navbar-nav { display: flex; gap: 4px; list-style: none; }
+        .nav-link { color: var(--text-muted); text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-link.active { color: var(--text); background: var(--primary); }
+
+        .page-header { padding: 48px 32px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 100%); }
+        .page-header h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+        .page-header p { color: var(--text-muted); font-size: 18px; max-width: 600px; }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 48px 32px; }
+
+        .section { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); margin-bottom: 32px; overflow: hidden; }
+        .section-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+        .section-header h2 { font-size: 20px; font-weight: 600; }
+        .section-body { padding: 24px; }
+
+        .endpoint-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .method { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .method-post { background: rgba(99,102,241,0.2); color: var(--primary-light); }
+        .method-get { background: rgba(16,185,129,0.2); color: var(--success-light); }
+        .endpoint-path { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--text); background: var(--bg-dark); padding: 8px 16px; border-radius: 8px; }
+
+        h3 { font-size: 16px; font-weight: 600; margin: 24px 0 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        h4 { font-size: 15px; font-weight: 600; margin: 20px 0 10px; }
+
+        pre {
+            background: #0d1117; color: #c9d1d9; padding: 20px; border-radius: 12px;
+            overflow-x: auto; margin: 16px 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; line-height: 1.5; border: 1px solid #30363d;
+        }
+        code { font-family: 'JetBrains Mono', monospace; }
+        .inline-code { background: var(--bg-dark); padding: 2px 8px; border-radius: 4px; font-size: 13px; }
+
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        th { background: var(--bg-dark); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+
+        .required { color: var(--danger); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+        .optional { color: var(--text-muted); font-size: 11px; }
+        .type { color: var(--primary-light); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+        .alert { padding: 16px 20px; border-radius: 12px; margin: 20px 0; display: flex; align-items: flex-start; gap: 12px; }
+        .alert-info { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); }
+        .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+        .alert svg { flex-shrink: 0; margin-top: 2px; }
+
+        .response-codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+        .response-code { background: var(--bg-dark); padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+        .code-num { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        .code-success { color: var(--success-light); }
+        .code-error { color: var(--danger); }
+
+        .footer { border-top: 1px solid var(--border); padding: 32px; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+        @@media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .navbar-nav { display: none; }
+            .page-header, .container { padding: 24px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="index.html">
+            <div class="logo">ET</div>
+            <span>Etisalat SaaS API</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link" href="index.html">Home</a></li>
+            <li><a class="nav-link active" href="api-reference.html">API Reference</a></li>
+            <li><a class="nav-link" href="code-reference.html">Code</a></li>
+            <li><a class="nav-link" href="deployment-guide.html">Deployment</a></li>
+            <li><a class="nav-link" href="qa-testing.html">QA Testing</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <h1>API Reference</h1>
+        <p>Complete documentation for the Etisalat SaaS Callback API endpoints</p>
+    </div>
+
+    <div class="container">
+        <div class="alert alert-info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div>
+                <strong>Authentication:</strong> All API endpoints require Basic Authentication. Use Base64 encoded <code class="inline-code">username:password</code> in the Authorization header.
+            </div>
+        </div>
+
+        <!-- ISV Provisioning Status (Outbound) -->
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <h2>ISV Provisioning Status (Outbound)</h2>
+            </div>
+            <div class="section-body">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/rest/xaas/v1/isvProvisioningStatus</span>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Send provisioning status callback to Etisalat XaaS platform. Called automatically when tickets close or manually from UI.</p>
+
+                <h3>Request Body (isvProvisioningStatusRequest)</h3>
+                <table>
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>referenceNumber</td><td><span class="type">string</span></td><td><span class="required">Required</span></td><td>Reference number from Etisalat (extracted from ticket body)</td></tr>
+                        <tr><td>subscriptionId</td><td><span class="type">string</span></td><td><span class="required">Required</span></td><td>Subscription GUID (from ticket subject, fallback to body/accountId)</td></tr>
+                        <tr><td>billingDate</td><td><span class="type">string</span></td><td><span class="required">Required</span></td><td>Date in format yyyyMMddHHmmss</td></tr>
+                        <tr><td>action</td><td><span class="type">string</span></td><td><span class="required">Required</span></td><td>ACCEPTED, REJECTED, or EXPIRED</td></tr>
+                        <tr><td>serviceAttribute</td><td><span class="type">array</span></td><td><span class="optional">Optional</span></td><td>Additional attributes</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Request</h4>
+                <pre>{
+  "isvProvisioningStatusRequest": {
+    "referenceNumber": "8718420424646786",
+    "subscriptionId": "81acb0d4-ce93-40b7-b07e-c9a0bdf69f33",
+    "billingDate": "20260610235650",
+    "action": "ACCEPTED",
+    "serviceAttribute": []
+  }
+}</pre>
+
+                <h4>Example Response</h4>
+                <pre>{
+  "isvProvisioningStatusResponse": {
+    "responseCode": "0",
+    "description": "Success"
+  }
+}</pre>
+
+                <h3>Actions</h3>
+                <table>
+                    <thead><tr><th>Action</th><th>When to Use</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>ACCEPTED</strong></td><td>Customer successfully onboarded, start billing</td></tr>
+                        <tr><td><strong>REJECTED</strong></td><td>Customer not onboarded (issue or declined)</td></tr>
+                        <tr><td><strong>EXPIRED</strong></td><td>SLA breached (30 days), customer not onboarded</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-warning" style="margin-top: 20px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div>
+                        <strong>Subscription ID Priority:</strong> Extracted from ticket subject GUID first, then body "Subscripiton ID:", then Account ID, then Ticket Number.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ISV Provisioning Status (Inbound) -->
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success-light)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <h2>ISV Provisioning Status (Inbound)</h2>
+            </div>
+            <div class="section-body">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/rest/xaas/v1/isvProvisioningStatus</span>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Receive provisioning requests from Etisalat XaaS platform (inbound callback). Requires Basic Authentication.</p>
+
+                <h3>Request Types from Etisalat</h3>
+                <table>
+                    <thead><tr><th>#</th><th>Request Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>New Purchase Request</td><td>Creates new subscription</td></tr>
+                        <tr><td>2</td><td>Suspension Request</td><td>Suspend subscription</td></tr>
+                        <tr><td>3</td><td>Reactivation Request</td><td>Reactivate suspended subscription</td></tr>
+                        <tr><td>4</td><td>Cessation Request</td><td>End subscription</td></tr>
+                        <tr><td>5</td><td>Cancellation Request</td><td>Cancel subscription</td></tr>
+                        <tr><td>6</td><td>Modify Quantity Request</td><td>Change quantity</td></tr>
+                        <tr><td>7</td><td>Change Plan Request</td><td>Change plan/tier</td></tr>
+                        <tr><td>8</td><td>Modify Email Request</td><td>Update email</td></tr>
+                        <tr><td>9</td><td>Modify Account ID Request</td><td>Update account ID</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Response Codes</h3>
+                <div class="response-codes">
+                    <div class="response-code"><span class="code-num code-success">0</span> Success</div>
+                    <div class="response-code"><span class="code-num code-error">1</span> Auth Failed</div>
+                    <div class="response-code"><span class="code-num code-error">3</span> Validation Error</div>
+                    <div class="response-code"><span class="code-num code-error">7</span> Invalid Action</div>
+                    <div class="response-code"><span class="code-num code-error">99</span> Internal Error</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Tickets -->
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success-light)" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <h2>Monitor Tickets</h2>
+            </div>
+            <div class="section-body">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/monitor/tickets</span>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Retrieve tracked subscription tickets with filtering and pagination.</p>
+
+                <h3>Query Parameters</h3>
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>page</td><td><span class="type">int</span></td><td>1</td><td>Page number</td></tr>
+                        <tr><td>pageSize</td><td><span class="type">int</span></td><td>20</td><td>Items per page</td></tr>
+                        <tr><td>search</td><td><span class="type">string</span></td><td>-</td><td>Search by ticket # or subject</td></tr>
+                        <tr><td>status</td><td><span class="type">string</span></td><td>-</td><td>Filter by ticket status</td></tr>
+                        <tr><td>callback</td><td><span class="type">string</span></td><td>-</td><td>Filter: true (success), false (pending), failed</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Response</h4>
+                <pre>{
+  "data": [
+    {
+      "id": "6848...",
+      "ticketNumber": "IT2026060194",
+      "subject": "Subscription - New Request",
+      "referenceNumber": "45623fd9-cca4-49b9",
+      "currentStatus": "Open",
+      "callbackSent": false,
+      "trackedAt": "2026-06-09T16:14:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 20,
+    "totalCount": 1,
+    "totalPages": 1
+  }
+}</pre>
+            </div>
+        </div>
+
+        <!-- Send Callback -->
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <h2>Send Callback</h2>
+            </div>
+            <div class="section-body">
+                <div class="endpoint-header">
+                    <span class="method method-post">POST</span>
+                    <span class="endpoint-path">/api/monitor/callback</span>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Manually send a callback to Etisalat for a tracked ticket.</p>
+
+                <h3>Request Body</h3>
+                <table>
+                    <thead>
+                        <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>ticketId</td><td><span class="type">string</span></td><td><span class="required">Required</span></td><td>Tracked ticket ID</td></tr>
+                        <tr><td>action</td><td><span class="type">string</span></td><td><span class="required">Required</span></td><td>ACCEPTED, REJECTED, or EXPIRED</td></tr>
+                        <tr><td>referenceNumber</td><td><span class="type">string</span></td><td><span class="optional">Optional</span></td><td>Reference number (required if ticket has none)</td></tr>
+                        <tr><td>reason</td><td><span class="type">string</span></td><td><span class="optional">Optional</span></td><td>Reason for the action</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Request</h4>
+                <pre>{
+  "ticketId": "684861a8b5b2a5d21f601510",
+  "action": "ACCEPTED",
+  "referenceNumber": "REF-2026-001",
+  "reason": "Subscription provisioned successfully"
+}</pre>
+
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <div>
+                        <strong>Retry on Failure:</strong> If a callback fails (response code != 0), you can call this endpoint again to retry. The UI also allows retrying failed callbacks directly.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLA Violations -->
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <h2>SLA Violations</h2>
+            </div>
+            <div class="section-body">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/monitor/sla/violations</span>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Get tickets that have violated or are approaching SLA deadlines.</p>
+
+                <h3>Query Parameters</h3>
+                <table>
+                    <thead>
+                        <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>page</td><td><span class="type">int</span></td><td>Page number</td></tr>
+                        <tr><td>pageSize</td><td><span class="type">int</span></td><td>Items per page</td></tr>
+                        <tr><td>violationType</td><td><span class="type">string</span></td><td>Filter: violated, warning</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Health Check -->
+        <div class="section">
+            <div class="section-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success-light)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <h2>Health Check</h2>
+            </div>
+            <div class="section-body">
+                <div class="endpoint-header">
+                    <span class="method method-get">GET</span>
+                    <span class="endpoint-path">/api/health</span>
+                </div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Check if the API service is running and healthy.</p>
+                <pre>{ "status": "Healthy", "timestamp": "2026-06-09T16:45:00Z" }</pre>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Etisalat SaaS Callback API v1.0 | Built with .NET 10 and MongoDB</p>
+    </footer>
+</body>
+</html>

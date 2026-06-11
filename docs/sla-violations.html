@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLA Violations - Etisalat SaaS API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --success: #10b981; --success-light: #34d399;
+            --warning: #f59e0b; --danger: #ef4444;
+            --bg-dark: #0f172a; --bg-card: #1e293b; --bg-card-hover: #334155;
+            --border: #334155; --text: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+        .navbar {
+            background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
+            padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand { font-size: 18px; font-weight: 600; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .navbar-nav { display: flex; gap: 4px; list-style: none; }
+        .nav-link { color: var(--text-muted); text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-link.active { color: var(--text); background: var(--primary); }
+
+        .config-panel { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 24px; }
+        .config-panel h3 { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; }
+        .config-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+        .config-input { flex: 1; min-width: 200px; }
+        .config-input label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .config-input input { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+        .config-input input:focus { outline: none; border-color: var(--primary); }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; font-family: inherit; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-dark); color: var(--text); border: 1px solid var(--border); }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        .sla-rules { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 24px; }
+        .sla-rules h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+        .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .rule-card { background: var(--bg-dark); border-radius: 8px; padding: 16px; border-left: 4px solid var(--primary); }
+        .rule-card.critical { border-left-color: var(--danger); }
+        .rule-card.priority { border-left-color: var(--warning); }
+        .rule-card.standard { border-left-color: var(--success); }
+        .rule-card h4 { font-size: 14px; margin-bottom: 6px; }
+        .rule-card .days { font-size: 24px; font-weight: 700; color: var(--primary-light); }
+        .rule-card p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border-radius: 12px; padding: 24px; border: 1px solid var(--border); }
+        .stat-card h3 { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 32px; font-weight: 700; }
+        .stat-card.violated .value { color: #f87171; }
+        .stat-card.warning .value { color: var(--warning); }
+        .stat-card.ok .value { color: var(--success-light); }
+        .stat-card.total .value { color: var(--primary-light); }
+
+        .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .filter-select { padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; cursor: pointer; }
+        .filter-select option { background: var(--bg-card); }
+        .refresh-indicator { color: var(--text-muted); font-size: 13px; margin-left: auto; }
+
+        .table-container { background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--bg-dark); padding: 14px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        .violation-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+        .violation-violated { background: rgba(239,68,68,0.2); color: #f87171; }
+        .violation-warning { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+        .status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .status-open { background: rgba(99,102,241,0.2); color: var(--primary-light); }
+        .status-inprogress { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+        .days-remaining { font-weight: 600; }
+        .days-remaining.negative { color: #f87171; }
+        .days-remaining.low { color: #fbbf24; }
+        .days-remaining.ok { color: var(--success-light); }
+
+        .progress-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+        .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .progress-fill.ok { background: var(--success); }
+        .progress-fill.warning { background: var(--warning); }
+        .progress-fill.violated { background: var(--danger); }
+
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-top: 1px solid var(--border); }
+        .page-info { color: var(--text-muted); font-size: 14px; }
+        .page-buttons { display: flex; gap: 8px; }
+        .page-btn { padding: 8px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 13px; }
+        .page-btn:hover:not(:disabled) { border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--bg-card); border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; border: 1px solid var(--border); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 18px; }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+        .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-state h3 { margin-bottom: 8px; color: var(--text); }
+        .loading { display: flex; justify-content: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 14px 24px; border-radius: 8px; color: #fff; font-weight: 500; z-index: 2000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.active { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .navbar-nav { display: none; }
+            .container { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="index.html">
+            <div class="logo">ET</div>
+            <span>Etisalat SaaS API</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link" href="index.html">Docs</a></li>
+            <li><a class="nav-link" href="monitor.html">Monitor</a></li>
+            <li><a class="nav-link active" href="sla-violations.html">SLA</a></li>
+            <li><a class="nav-link" href="qa-testing.html">Testing</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="config-panel">
+            <h3>API Configuration</h3>
+            <div class="config-row">
+                <div class="config-input">
+                    <label>API Base URL</label>
+                    <input type="text" id="apiUrl" value="http://localhost:5000" />
+                </div>
+                <button class="btn btn-primary" onclick="loadData()">Connect & Load</button>
+            </div>
+        </div>
+
+        <div class="sla-rules" id="slaRulesSection">
+            <h3>SLA Rules</h3>
+            <div class="rules-grid" id="rulesGrid">
+                <div class="rule-card standard"><h4>Standard</h4><div class="days">30 days</div><p>Warning at 25 days</p></div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card violated"><h3>SLA Violated</h3><div class="value" id="statViolated">-</div></div>
+            <div class="stat-card warning"><h3>Warning</h3><div class="value" id="statWarning">-</div></div>
+            <div class="stat-card ok"><h3>On Track</h3><div class="value" id="statOk">-</div></div>
+            <div class="stat-card total"><h3>Total Active</h3><div class="value" id="statTotal">-</div></div>
+        </div>
+
+        <div class="filters">
+            <select class="filter-select" id="violationFilter" onchange="loadViolations()">
+                <option value="">All Issues</option>
+                <option value="violated">Violated Only</option>
+                <option value="warning">Warnings Only</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadViolations()">Refresh</button>
+            <div class="refresh-indicator" id="lastRefresh">Last updated: -</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticket #</th>
+                        <th>Subject</th>
+                        <th>Reference</th>
+                        <th>Status</th>
+                        <th>SLA Rule</th>
+                        <th>Elapsed</th>
+                        <th>Remaining</th>
+                        <th>Violation</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="violationsBody">
+                    <tr><td colspan="9"><div class="empty-state"><h3>Connect to API</h3><p>Enter your API URL and click "Connect & Load"</p></div></td></tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <div class="page-info" id="pageInfo">Showing 0 violations</div>
+                <div class="page-buttons">
+                    <button class="page-btn" id="prevBtn" onclick="changePage(-1)" disabled>Previous</button>
+                    <button class="page-btn" id="nextBtn" onclick="changePage(1)" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="expireModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Send EXPIRED Callback</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div>
+                <p style="margin-bottom: 15px;">This ticket has violated the SLA. Send EXPIRED callback?</p>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">
+                    Ticket: <span id="expireTicketNumber"></span><br>
+                    Overdue: <span id="expireDaysOverdue" style="color:#f87171;"></span>
+                </p>
+                <input type="hidden" id="expireTicketId">
+                <div class="action-buttons">
+                    <button class="btn btn-danger" onclick="sendExpiredCallback()">Send EXPIRED</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let currentPage = 1; const pageSize = 20; let totalPages = 1;
+        function getApiUrl() { return document.getElementById('apiUrl').value.replace(/\/$/, ''); }
+        async function loadData() { await Promise.all([loadSlaSettings(), loadSlaStats(), loadViolations()]); }
+        async function loadSlaSettings() {
+            try { const r = await fetch(`${getApiUrl()}/api/monitor/sla/settings`); const d = await r.json(); renderSlaRules(d.rules); } catch(e) { console.error(e); }
+        }
+        function renderSlaRules(rules) {
+            const grid = document.getElementById('rulesGrid');
+            if (!rules || !rules.length) { grid.innerHTML = '<p style="color:var(--text-muted);">No rules configured</p>'; return; }
+            grid.innerHTML = rules.map(r => `<div class="rule-card ${r.appliesTo}"><h4>${r.name}</h4><div class="days">${r.slaDays} days</div><p>Warning at ${r.warningDays} days</p></div>`).join('');
+        }
+        async function loadSlaStats() {
+            try { const r = await fetch(`${getApiUrl()}/api/monitor/sla/stats`); const d = await r.json();
+            document.getElementById('statViolated').textContent = d.violated;
+            document.getElementById('statWarning').textContent = d.warning;
+            document.getElementById('statOk').textContent = d.ok;
+            document.getElementById('statTotal').textContent = d.total; } catch(e) { console.error(e); }
+        }
+        async function loadViolations() {
+            const tbody = document.getElementById('violationsBody');
+            tbody.innerHTML = '<tr><td colspan="9"><div class="loading"><div class="spinner"></div></div></td></tr>';
+            try {
+                const filter = document.getElementById('violationFilter').value;
+                let url = `${getApiUrl()}/api/monitor/sla/violations?page=${currentPage}&pageSize=${pageSize}`;
+                if (filter) url += `&violationType=${filter}`;
+                const r = await fetch(url); const result = await r.json();
+                totalPages = result.pagination.totalPages;
+                renderViolations(result.data);
+                updatePagination(result.pagination, result.summary);
+                document.getElementById('lastRefresh').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+            } catch(e) { tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><h3>Error</h3><p>${e.message}</p></div></td></tr>`; }
+        }
+        function renderViolations(violations) {
+            const tbody = document.getElementById('violationsBody');
+            if (!violations || !violations.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><h3>No SLA Issues</h3><p>All tickets within SLA</p></div></td></tr>'; return; }
+            tbody.innerHTML = violations.map(v => {
+                const pct = Math.min(100, (v.daysElapsed / v.slaDays) * 100);
+                const pc = v.violationStatus === 'violated' ? 'violated' : (v.violationStatus === 'warning' ? 'warning' : 'ok');
+                return `<tr>
+                    <td>${v.ticketNumber || '-'}</td>
+                    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${v.subject||''}">${v.subject||'-'}</td>
+                    <td>${v.referenceNumber||'-'}</td>
+                    <td><span class="status-pill status-${v.currentStatus.toLowerCase()}">${v.currentStatus}</span></td>
+                    <td>${v.appliedRule}</td>
+                    <td>${v.daysElapsed.toFixed(1)}<div class="progress-bar"><div class="progress-fill ${pc}" style="width:${pct}%"></div></div></td>
+                    <td><span class="days-remaining ${v.daysRemaining<0?'negative':(v.daysRemaining<5?'low':'ok')}">${v.daysRemaining.toFixed(1)}</span></td>
+                    <td><span class="violation-badge violation-${v.violationStatus}">${v.violationStatus}</span></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="openExpireModal('${v.ticketId}','${v.ticketNumber}',${Math.abs(v.daysRemaining).toFixed(1)})">EXPIRE</button></td>
+                </tr>`;
+            }).join('');
+        }
+        function updatePagination(p, s) { document.getElementById('pageInfo').textContent = `${s.totalViolations} violated, ${s.totalWarnings} warnings - Page ${p.page}/${p.totalPages}`; document.getElementById('prevBtn').disabled = p.page <= 1; document.getElementById('nextBtn').disabled = p.page >= p.totalPages; }
+        function changePage(d) { currentPage += d; if(currentPage<1)currentPage=1; if(currentPage>totalPages)currentPage=totalPages; loadViolations(); }
+        function openExpireModal(id, num, days) { document.getElementById('expireTicketId').value = id; document.getElementById('expireTicketNumber').textContent = num; document.getElementById('expireDaysOverdue').textContent = days + ' days'; document.getElementById('expireModal').classList.add('active'); }
+        function closeModal() { document.getElementById('expireModal').classList.remove('active'); }
+        async function sendExpiredCallback() {
+            const id = document.getElementById('expireTicketId').value;
+            try { const r = await fetch(`${getApiUrl()}/api/monitor/callback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId: id, action: 'EXPIRED', reason: 'SLA violation' }) }); const d = await r.json();
+            if (d.success) { showToast('EXPIRED sent!', 'success'); closeModal(); loadData(); } else { showToast(`Failed: ${d.error}`, 'error'); } } catch(e) { showToast(`Error: ${e.message}`, 'error'); }
+        }
+        function showToast(msg, type='success') { const t = document.getElementById('toast'); t.textContent = msg; t.className = `toast ${type} active`; setTimeout(() => t.classList.remove('active'), 3000); }
+        document.getElementById('expireModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    </script>
+</body>
+</html>

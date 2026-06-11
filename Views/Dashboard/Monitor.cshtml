@@ -1,0 +1,273 @@
+@model List<TrackedTicket>
+@{
+    ViewData["Title"] = "Ticket Monitor";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Ticket Monitor</h1>
+        <p class="page-subtitle">Track and manage subscription tickets</p>
+    </div>
+    <a asp-action="Monitor" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 01.908-.417A6 6 0 118 2v1z"/><path d="M8 4.466V.534a.25.25 0 01.41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 018 4.466z"/></svg>
+        Refresh
+    </a>
+</div>
+
+<form method="get" class="filters">
+    <div class="filter-group flex-1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="search" class="form-control" style="min-width: 220px;" placeholder="Search by ticket # or subject..." value="@ViewBag.SearchFilter" />
+    </div>
+    <div class="filter-group">
+        <span class="filter-label">Status:</span>
+        <select name="status" class="form-select">
+            <option value="">All</option>
+            <option value="Open" selected="@(ViewBag.StatusFilter == "Open")">Open</option>
+            <option value="InProgress" selected="@(ViewBag.StatusFilter == "InProgress")">In Progress</option>
+            <option value="WaitingForUserInput" selected="@(ViewBag.StatusFilter == "WaitingForUserInput")">Waiting For User</option>
+            <option value="Resolved" selected="@(ViewBag.StatusFilter == "Resolved")">Resolved</option>
+            <option value="Closed" selected="@(ViewBag.StatusFilter == "Closed")">Closed</option>
+            <option value="Reassigned" selected="@(ViewBag.StatusFilter == "Reassigned")">Reassigned</option>
+            <option value="Draft" selected="@(ViewBag.StatusFilter == "Draft")">Draft</option>
+            <option value="WaitingForVendor" selected="@(ViewBag.StatusFilter == "WaitingForVendor")">Waiting For Vendor</option>
+            <option value="WaitingForApproval" selected="@(ViewBag.StatusFilter == "WaitingForApproval")">Waiting For Approval</option>
+            <option value="Approved" selected="@(ViewBag.StatusFilter == "Approved")">Approved</option>
+            <option value="Rejected" selected="@(ViewBag.StatusFilter == "Rejected")">Rejected</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <span class="filter-label">Callback:</span>
+        <select name="callback" class="form-select">
+            <option value="">All</option>
+            <option value="true" selected="@(ViewBag.CallbackFilter == "true")">Sent (Success)</option>
+            <option value="false" selected="@(ViewBag.CallbackFilter == "false")">Pending</option>
+            <option value="failed" selected="@(ViewBag.CallbackFilter == "failed")">Failed</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filter
+    </button>
+    <span class="text-muted" style="font-size: 13px;">@ViewBag.TotalCount tickets found</span>
+</form>
+
+<form id="bulkForm" asp-action="BulkCallback" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="action" id="bulkAction" value="" />
+
+    <div class="bulk-actions" id="bulkActions">
+        <span class="bulk-count" id="selectedCount">0 selected</span>
+        <span class="text-muted">Send callback:</span>
+        <button type="button" class="btn btn-success btn-sm" onclick="submitBulk('ACCEPTED')">ACCEPTED</button>
+        <button type="button" class="btn btn-warning btn-sm" onclick="submitBulk('REJECTED')">REJECTED</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="submitBulk('EXPIRED')">EXPIRED</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()">Clear</button>
+    </div>
+
+    <div class="table-container">
+        <table style="table-layout: fixed; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 50px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" /></th>
+                    <th style="width: 130px;">Ticket #</th>
+                    <th style="width: 35%;">Subject</th>
+                    <th style="width: 18%;">Reference No.</th>
+                    <th style="width: 110px;">Status</th>
+                    <th style="width: 100px;">Callback</th>
+                    <th style="width: 90px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                </div>
+                                <h3>No tickets found</h3>
+                                <p>Try adjusting your search or filter criteria</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @foreach (var ticket in Model)
+                {
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="ticketIds" value="@ticket.Id"
+                                   class="ticket-checkbox" onchange="updateBulkActions()"
+                                   @(ticket.CallbackSent ? "disabled" : "") />
+                        </td>
+                        <td>
+                            <a asp-action="TicketDetails" asp-route-id="@ticket.Id" class="link" style="font-weight: 500;">
+                                @ticket.TicketNumber
+                            </a>
+                        </td>
+                        <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@ticket.Subject">
+                            @ticket.Subject
+                        </td>
+                        <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);">
+                            @(ticket.ReferenceNumber ?? "—")
+                        </td>
+                        <td>
+                            <span class="status-pill status-@ticket.CurrentStatus.ToString().ToLower()">
+                                @ticket.CurrentStatus
+                            </span>
+                        </td>
+                        @{
+                            var isSuccess = ticket.CallbackSent && ticket.CallbackResponseCode == "0";
+                            var isFailed = ticket.CallbackSent && ticket.CallbackResponseCode != "0";
+                        }
+                        <td>
+                            @if (isSuccess)
+                            {
+                                <span class="callback-badge callback-sent">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                    @ticket.CallbackAction
+                                </span>
+                            }
+                            else if (isFailed)
+                            {
+                                <span class="callback-badge callback-failed" style="background: rgba(239,68,68,0.15); color: #f87171;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    Failed
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="callback-badge callback-pending">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    Pending
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (!ticket.CallbackSent || isFailed)
+                            {
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openCallbackModal('@ticket.Id', '@ticket.TicketNumber')">
+                                    @(isFailed ? "Retry" : "Send")
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted" style="font-size: 12px;">@ticket.CallbackResponseCode</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="pagination">
+                <a class="page-link @(ViewBag.CurrentPage <= 1 ? "disabled" : "")"
+                   asp-action="Monitor" asp-route-page="@(ViewBag.CurrentPage - 1)"
+                   asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter">
+                    &larr; Previous
+                </a>
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <a class="page-link @(i == ViewBag.CurrentPage ? "active" : "")"
+                       asp-action="Monitor" asp-route-page="@i"
+                       asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter">
+                        @i
+                    </a>
+                }
+                <a class="page-link @(ViewBag.CurrentPage >= ViewBag.TotalPages ? "disabled" : "")"
+                   asp-action="Monitor" asp-route-page="@(ViewBag.CurrentPage + 1)"
+                   asp-route-status="@ViewBag.StatusFilter" asp-route-callback="@ViewBag.CallbackFilter" asp-route-search="@ViewBag.SearchFilter">
+                    Next &rarr;
+                </a>
+            </div>
+        }
+    </div>
+</form>
+
+<div id="callbackModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Send Callback</h3>
+            <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form asp-action="SendCallback" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ticketId" id="modalTicketId" />
+            <p class="mb-3">Sending callback for ticket: <strong id="modalTicketNumber" class="text-primary"></strong></p>
+            <div class="form-group">
+                <label>Reason (optional)</label>
+                <input type="text" name="reason" class="form-control" placeholder="Enter reason for this action" style="width: 100%;" />
+            </div>
+            <p class="text-muted mb-3" style="font-size: 13px;">Select the action to send to Etisalat:</p>
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="submit" name="action" value="ACCEPTED" class="btn btn-success">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    ACCEPTED
+                </button>
+                <button type="submit" name="action" value="REJECTED" class="btn btn-warning">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    REJECTED
+                </button>
+                <button type="submit" name="action" value="EXPIRED" class="btn btn-danger">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    EXPIRED
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openCallbackModal(ticketId, ticketNumber) {
+            document.getElementById('modalTicketId').value = ticketId;
+            document.getElementById('modalTicketNumber').textContent = ticketNumber;
+            document.getElementById('callbackModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('callbackModal').classList.remove('show');
+        }
+
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            document.querySelectorAll('.ticket-checkbox:not(:disabled)').forEach(cb => cb.checked = checked);
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const checked = document.querySelectorAll('.ticket-checkbox:checked').length;
+            const bulkActions = document.getElementById('bulkActions');
+            if (checked > 0) {
+                bulkActions.classList.add('active');
+                document.getElementById('selectedCount').textContent = checked + ' selected';
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.ticket-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('selectAll').checked = false;
+            updateBulkActions();
+        }
+
+        function submitBulk(action) {
+            if (confirm('Send ' + action + ' callback to selected tickets?')) {
+                document.getElementById('bulkAction').value = action;
+                document.getElementById('bulkForm').submit();
+            }
+        }
+
+        document.getElementById('callbackModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+}

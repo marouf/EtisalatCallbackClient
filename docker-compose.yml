@@ -1,0 +1,53 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - TicketMonitor__TicketDbConnectionString=mongodb://host.docker.internal:27017
+      - TicketMonitor__TicketDbName=ServiceMeTest
+      - TicketMonitor__Enabled=true
+      - TicketMonitor__PollingIntervalSeconds=30
+    depends_on:
+      mongodb:
+        condition: service_started
+    networks:
+      - etisalat-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:8.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - etisalat-network
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    depends_on:
+      mongodb:
+        condition: service_started
+    networks:
+      - etisalat-network
+    restart: unless-stopped
+
+networks:
+  etisalat-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

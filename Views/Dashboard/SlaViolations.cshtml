@@ -1,0 +1,235 @@
+@model List<SlaViolationViewModel>
+@using EtisalatSaasCallback.Configuration
+@{
+    ViewData["Title"] = "SLA Violations";
+    var rules = ViewBag.SlaRules as List<SlaRule>;
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">SLA Violations</h1>
+        <p class="page-subtitle">Monitor tickets at risk of SLA breach</p>
+    </div>
+    <a asp-action="SlaViolations" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 01.908-.417A6 6 0 118 2v1z"/><path d="M8 4.466V.534a.25.25 0 01.41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 018 4.466z"/></svg>
+        Refresh
+    </a>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card danger">
+        <div class="icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="label">SLA Violated</div>
+        <div class="value">@ViewBag.ViolatedCount</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="label">Warning</div>
+        <div class="value">@ViewBag.WarningCount</div>
+    </div>
+    <div class="stat-card primary">
+        <div class="icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="label">Total Issues</div>
+        <div class="value">@ViewBag.TotalCount</div>
+    </div>
+</div>
+
+@if (rules != null && rules.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <span>SLA Rules Configuration</span>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                @foreach (var rule in rules)
+                {
+                    var borderColor = rule.AppliesTo == "critical" ? "var(--danger)" : (rule.AppliesTo == "priority" ? "var(--warning)" : "var(--success)");
+                    <div style="background: var(--bg-dark); border-radius: 12px; padding: 20px; border-left: 4px solid @borderColor;">
+                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 8px;">@rule.Name</div>
+                        <div style="font-size: 28px; font-weight: 700; color: var(--primary-light); margin-bottom: 8px;">@rule.SlaDays days</div>
+                        <div style="font-size: 13px; color: var(--text-muted);">Warning at @rule.WarningDays days</div>
+                        <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">Applies to: @rule.AppliesTo</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<form method="get" class="filters">
+    <div class="filter-group">
+        <span class="filter-label">Show:</span>
+        <select name="type" class="form-select" onchange="this.form.submit()">
+            <option value="">All Issues</option>
+            <option value="violated" selected="@(ViewBag.TypeFilter == "violated")">Violated Only</option>
+            <option value="warning" selected="@(ViewBag.TypeFilter == "warning")">Warnings Only</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filter
+    </button>
+</form>
+
+<div class="table-container">
+    <table style="table-layout: fixed; width: 100%;">
+        <thead>
+            <tr>
+                <th style="width: 120px;">Ticket #</th>
+                <th style="width: 25%;">Subject</th>
+                <th style="width: 15%;">Reference No.</th>
+                <th style="width: 100px;">Status</th>
+                <th style="width: 90px;">SLA Rule</th>
+                <th style="width: 120px;">Progress</th>
+                <th style="width: 100px;">Remaining</th>
+                <th style="width: 90px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="icon" style="background: rgba(16,185,129,0.15);">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </div>
+                            <h3>All Clear!</h3>
+                            <p>No SLA violations or warnings at this time</p>
+                        </div>
+                    </td>
+                </tr>
+            }
+            @foreach (var item in Model)
+            {
+                var progressPercent = Math.Min(100, (item.DaysElapsed / item.SlaDays) * 100);
+                var progressClass = item.ViolationStatus == "violated" ? "violated" : "warning";
+                <tr>
+                    <td>
+                        <a asp-action="TicketDetails" asp-route-id="@item.Ticket.Id" class="link" style="font-weight: 500;">
+                            @item.Ticket.TicketNumber
+                        </a>
+                    </td>
+                    <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@item.Ticket.Subject">
+                        @item.Ticket.Subject
+                    </td>
+                    <td style="color: var(--text-muted);">@(item.Ticket.ReferenceNumber ?? "—")</td>
+                    <td>
+                        <span class="status-pill status-@item.Ticket.CurrentStatus.ToString().ToLower()">
+                            @item.Ticket.CurrentStatus
+                        </span>
+                    </td>
+                    <td style="font-size: 13px;">@item.AppliedRule</td>
+                    <td>
+                        <div style="font-size: 13px; font-weight: 500;">@item.DaysElapsed.ToString("0.#") days</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill progress-@progressClass" style="width: @progressPercent%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="@(item.DaysRemaining < 0 ? "text-danger" : "text-warning")" style="font-weight: 600; font-size: 15px;">
+                            @item.DaysRemaining.ToString("0.#")
+                        </span>
+                        <span class="text-muted" style="font-size: 12px;">days</span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="openExpireModal('@item.Ticket.Id', '@item.Ticket.TicketNumber', '@Math.Abs(item.DaysRemaining).ToString("0.#")')">
+                            EXPIRE
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="pagination">
+            <a class="page-link @(ViewBag.CurrentPage <= 1 ? "disabled" : "")"
+               asp-action="SlaViolations" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-type="@ViewBag.TypeFilter">
+                &larr; Previous
+            </a>
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <a class="page-link @(i == ViewBag.CurrentPage ? "active" : "")"
+                   asp-action="SlaViolations" asp-route-page="@i" asp-route-type="@ViewBag.TypeFilter">
+                    @i
+                </a>
+            }
+            <a class="page-link @(ViewBag.CurrentPage >= ViewBag.TotalPages ? "disabled" : "")"
+               asp-action="SlaViolations" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-type="@ViewBag.TypeFilter">
+                Next &rarr;
+            </a>
+        </div>
+    }
+</div>
+
+<div id="expireModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Send EXPIRED Callback</h3>
+            <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form asp-action="SendCallback" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ticketId" id="expireTicketId" />
+            <input type="hidden" name="action" value="EXPIRED" />
+            <input type="hidden" name="reason" value="SLA violation" />
+
+            <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                <div class="d-flex align-center gap-3 mb-2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--danger-light)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span style="font-weight: 600; color: var(--danger-light);">SLA Violation Detected</span>
+                </div>
+                <p class="text-muted" style="font-size: 14px; margin: 0;">This ticket has exceeded its SLA deadline and will be marked as EXPIRED.</p>
+            </div>
+
+            <div class="mb-3">
+                <span class="text-muted">Ticket:</span>
+                <strong id="expireTicketNumber" class="text-primary"></strong>
+            </div>
+            <div class="mb-4">
+                <span class="text-muted">Days overdue:</span>
+                <strong id="expireDaysOverdue" class="text-danger"></strong>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Send EXPIRED
+                </button>
+                <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openExpireModal(ticketId, ticketNumber, daysOverdue) {
+            document.getElementById('expireTicketId').value = ticketId;
+            document.getElementById('expireTicketNumber').textContent = ticketNumber;
+            document.getElementById('expireDaysOverdue').textContent = daysOverdue + ' days';
+            document.getElementById('expireModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('expireModal').classList.remove('show');
+        }
+
+        document.getElementById('expireModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+}

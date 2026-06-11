@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Monitor - Etisalat SaaS API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --success: #10b981; --success-light: #34d399;
+            --warning: #f59e0b; --danger: #ef4444;
+            --bg-dark: #0f172a; --bg-card: #1e293b; --bg-card-hover: #334155;
+            --border: #334155; --text: #f8fafc; --text-muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+        .navbar {
+            background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(12px);
+            padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand { font-size: 18px; font-weight: 600; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .navbar-nav { display: flex; gap: 4px; list-style: none; }
+        .nav-link { color: var(--text-muted); text-decoration: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-link.active { color: var(--text); background: var(--primary); }
+        .status-badge { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(16,185,129,0.1); border: 1px solid var(--success); border-radius: 20px; font-size: 13px; }
+        .status-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .config-panel { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 24px; }
+        .config-panel h3 { font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; }
+        .config-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+        .config-input { flex: 1; min-width: 200px; }
+        .config-input label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .config-input input { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+        .config-input input:focus { outline: none; border-color: var(--primary); }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; font-family: inherit; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-dark); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--primary); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border-radius: 12px; padding: 24px; border: 1px solid var(--border); transition: all 0.2s; }
+        .stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .stat-card h3 { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 32px; font-weight: 700; }
+        .stat-card.total .value { color: var(--primary-light); }
+        .stat-card.pending .value { color: var(--warning); }
+        .stat-card.sent .value { color: var(--success-light); }
+        .stat-card.closed .value { color: #f87171; }
+
+        .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .filter-select { padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; cursor: pointer; }
+        .filter-select option { background: var(--bg-card); }
+        .refresh-indicator { color: var(--text-muted); font-size: 13px; margin-left: auto; }
+
+        .bulk-actions { display: none; background: rgba(99,102,241,0.1); border: 1px solid var(--primary); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bulk-actions.active { display: flex; }
+        .bulk-actions span { font-weight: 500; font-size: 14px; }
+
+        .table-container { background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--bg-dark); padding: 14px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        .checkbox-cell { width: 40px; }
+        .checkbox-cell input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+        .status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .status-open { background: rgba(99,102,241,0.2); color: var(--primary-light); }
+        .status-inprogress { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .status-resolved { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .status-closed { background: rgba(16,185,129,0.2); color: var(--success-light); }
+        .status-rejected { background: rgba(239,68,68,0.2); color: #f87171; }
+
+        .callback-status { display: flex; align-items: center; gap: 8px; }
+        .callback-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+        .callback-sent { background: rgba(16,185,129,0.2); color: var(--success-light); }
+        .callback-pending { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .callback-failed { background: rgba(239,68,68,0.2); color: #f87171; }
+
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-top: 1px solid var(--border); }
+        .page-info { color: var(--text-muted); font-size: 14px; }
+        .page-buttons { display: flex; gap: 8px; }
+        .page-btn { padding: 8px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--bg-card); border-radius: 16px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 18px; }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
+        .detail-row { display: flex; border-bottom: 1px solid var(--border); padding: 12px 0; }
+        .detail-label { width: 140px; color: var(--text-muted); font-size: 13px; }
+        .detail-value { flex: 1; font-size: 14px; }
+        .action-buttons { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+        .auto-refresh-toggle { display: flex; align-items: center; gap: 8px; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; background: var(--border); border-radius: 12px; cursor: pointer; transition: all 0.3s; }
+        .toggle-switch.active { background: var(--primary); }
+        .toggle-switch::after { content: ''; position: absolute; width: 18px; height: 18px; background: var(--text); border-radius: 50%; top: 3px; left: 3px; transition: all 0.3s; }
+        .toggle-switch.active::after { left: 23px; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-state h3 { margin-bottom: 8px; color: var(--text); }
+        .loading { display: flex; justify-content: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .truncate { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .clickable { cursor: pointer; color: var(--primary-light); }
+        .clickable:hover { text-decoration: underline; }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 14px 24px; border-radius: 8px; color: #fff; font-weight: 500; z-index: 2000; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.active { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); color: #000; }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 0 16px; }
+            .navbar-nav { display: none; }
+            .container { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="index.html">
+            <div class="logo">ET</div>
+            <span>Etisalat SaaS API</span>
+        </a>
+        <ul class="navbar-nav">
+            <li><a class="nav-link" href="index.html">Docs</a></li>
+            <li><a class="nav-link active" href="monitor.html">Monitor</a></li>
+            <li><a class="nav-link" href="sla-violations.html">SLA</a></li>
+            <li><a class="nav-link" href="qa-testing.html">Testing</a></li>
+        </ul>
+        <div class="status-badge" id="serviceStatus">
+            <div class="status-dot"></div>
+            <span>Monitoring Active</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="config-panel">
+            <h3>API Configuration</h3>
+            <div class="config-row">
+                <div class="config-input">
+                    <label>API Base URL</label>
+                    <input type="text" id="apiUrl" value="http://localhost:5000" />
+                </div>
+                <button class="btn btn-primary" onclick="loadData()">Connect & Load</button>
+                <div class="auto-refresh-toggle">
+                    <span style="font-size: 13px; color: var(--text-muted);">Auto-refresh</span>
+                    <div class="toggle-switch" id="autoRefreshToggle" onclick="toggleAutoRefresh()"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card total"><h3>Total Tracked</h3><div class="value" id="statTotal">-</div></div>
+            <div class="stat-card pending"><h3>Pending Callback</h3><div class="value" id="statPending">-</div></div>
+            <div class="stat-card sent"><h3>Callback Sent</h3><div class="value" id="statSent">-</div></div>
+            <div class="stat-card closed"><h3>Closed Tickets</h3><div class="value" id="statClosed">-</div></div>
+        </div>
+
+        <div class="bulk-actions" id="bulkActions">
+            <span id="selectedCount">0 selected</span>
+            <button class="btn btn-success btn-sm" onclick="sendBulkCallback('ACCEPTED')">ACCEPTED</button>
+            <button class="btn btn-warning btn-sm" onclick="sendBulkCallback('REJECTED')">REJECTED</button>
+            <button class="btn btn-danger btn-sm" onclick="sendBulkCallback('EXPIRED')">EXPIRED</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearSelection()">Clear</button>
+        </div>
+
+        <div class="filters">
+            <select class="filter-select" id="statusFilter" onchange="loadTickets()">
+                <option value="">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+            <select class="filter-select" id="callbackFilter" onchange="loadTickets()">
+                <option value="">All Callbacks</option>
+                <option value="true">Sent (Success)</option>
+                <option value="false">Pending</option>
+                <option value="failed">Failed</option>
+            </select>
+            <input type="text" class="filter-select" id="searchFilter" placeholder="Search ticket # or subject..." style="min-width: 220px;" onkeyup="if(event.key==='Enter')loadTickets()">
+            <button class="btn btn-secondary" onclick="loadTickets()">Refresh</button>
+            <div class="refresh-indicator" id="lastRefresh">Last updated: -</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                        <th>Ticket #</th>
+                        <th>Subject</th>
+                        <th>Reference No.</th>
+                        <th>Status</th>
+                        <th>Callback</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketsBody">
+                    <tr><td colspan="7"><div class="empty-state"><h3>Connect to API</h3><p>Enter your API URL and click "Connect & Load"</p></div></td></tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <div class="page-info" id="pageInfo">Showing 0 of 0 tickets</div>
+                <div class="page-buttons">
+                    <button class="page-btn" id="prevBtn" onclick="changePage(-1)" disabled>Previous</button>
+                    <button class="page-btn" id="nextBtn" onclick="changePage(1)" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="ticketModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Ticket Details</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="callbackModal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Send Callback</h2><button class="modal-close" onclick="closeCallbackModal()">&times;</button></div>
+            <div id="callbackModalBody">
+                <p style="margin-bottom: 20px; color: var(--text-muted);">Select action to send to Etisalat:</p>
+                <input type="hidden" id="callbackTicketId">
+                <div class="config-input" style="margin-bottom: 20px;">
+                    <label>Reason (optional)</label>
+                    <input type="text" id="callbackReason" placeholder="Enter reason for this action">
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="sendCallback('ACCEPTED')">ACCEPTED</button>
+                    <button class="btn btn-warning" onclick="sendCallback('REJECTED')">REJECTED</button>
+                    <button class="btn btn-danger" onclick="sendCallback('EXPIRED')">EXPIRED</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let currentPage = 1; const pageSize = 20; let autoRefreshInterval = null; let totalPages = 1;
+        let selectedTickets = new Set(); let ticketsData = [];
+        function getApiUrl() { return document.getElementById('apiUrl').value.replace(/\/$/, ''); }
+        async function loadData() { await Promise.all([loadStats(), loadTickets()]); }
+        async function loadStats() {
+            try {
+                const r = await fetch(`${getApiUrl()}/api/monitor/stats`);
+                if (!r.ok) throw new Error('Failed');
+                const d = await r.json();
+                document.getElementById('statTotal').textContent = d.total;
+                document.getElementById('statPending').textContent = d.pending;
+                document.getElementById('statSent').textContent = d.callbackSent;
+                document.getElementById('statClosed').textContent = d.closed;
+                const s = document.getElementById('serviceStatus');
+                s.innerHTML = d.monitorEnabled ? `<div class="status-dot"></div><span>Monitoring (${d.pollingInterval}s)</span>` : `<span>Disabled</span>`;
+                s.style.borderColor = d.monitorEnabled ? 'var(--success)' : 'var(--danger)';
+            } catch(e) { console.error(e); }
+        }
+        async function loadTickets() {
+            const tbody = document.getElementById('ticketsBody');
+            tbody.innerHTML = '<tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr>';
+            try {
+                const status = document.getElementById('statusFilter').value;
+                const callback = document.getElementById('callbackFilter').value;
+                const search = document.getElementById('searchFilter').value;
+                let url = `${getApiUrl()}/api/monitor/tickets?page=${currentPage}&pageSize=${pageSize}`;
+                if (status) url += `&status=${status}`;
+                if (callback) url += `&callback=${callback}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                const r = await fetch(url);
+                if (!r.ok) throw new Error('Failed');
+                const result = await r.json();
+                totalPages = result.pagination.totalPages;
+                ticketsData = result.data;
+                renderTickets(result.data);
+                updatePagination(result.pagination);
+                document.getElementById('lastRefresh').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+            } catch(e) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><h3>Error</h3><p>${e.message}</p></div></td></tr>`; }
+        }
+        function renderTickets(tickets) {
+            const tbody = document.getElementById('ticketsBody');
+            if (!tickets || !tickets.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><h3>No Tickets</h3></div></td></tr>'; return; }
+            tbody.innerHTML = tickets.map(t => `
+                <tr>
+                    <td class="checkbox-cell"><input type="checkbox" ${selectedTickets.has(t.id)?'checked':''} onchange="toggleTicketSelection('${t.id}')" ${t.callbackSent?'disabled':''}></td>
+                    <td class="clickable" onclick="showTicketDetails('${t.id}')">${t.ticketNumber||'-'}</td>
+                    <td class="truncate" title="${t.subject||''}">${t.subject||'-'}</td>
+                    <td>${t.referenceNumber||'-'}</td>
+                    <td><span class="status-pill status-${getStatusClass(t.currentStatus)}">${getStatusLabel(t.currentStatus)}</span></td>
+                    <td><div class="callback-status"><div class="callback-icon ${t.callbackSent?(t.callbackResponseCode==='0'?'callback-sent':'callback-failed'):'callback-pending'}">${t.callbackSent?(t.callbackResponseCode==='0'?'&#10003;':'&#10007;'):'&#8987;'}</div><span>${t.callbackSent?(t.callbackResponseCode==='0'?(t.callbackAction||'Sent'):'Failed'):'Pending'}</span></div></td>
+                    <td>${(!t.callbackSent||(t.callbackSent&&t.callbackResponseCode!=='0'))?`<button class="btn btn-${t.callbackSent?'warning':'primary'} btn-sm" onclick="openCallbackModal('${t.id}')">${t.callbackSent?'Retry':'Send'}</button>`:`<span style="color:var(--text-muted);font-size:12px;">${t.callbackResponseCode||''}</span>`}</td>
+                </tr>`).join('');
+            updateBulkActions();
+        }
+        function getStatusLabel(s) { const l={0:'Open',1:'In Progress',2:'Waiting',3:'Resolved',4:'Closed',10:'Rejected'}; return l[s]||s||'Unknown'; }
+        function getStatusClass(s) { const c={0:'open',1:'inprogress',3:'resolved',4:'closed',10:'rejected'}; return c[s]||'open'; }
+        function updatePagination(p) { document.getElementById('pageInfo').textContent=`Page ${p.page} of ${p.totalPages} (${p.totalCount} tickets)`; document.getElementById('prevBtn').disabled=p.page<=1; document.getElementById('nextBtn').disabled=p.page>=p.totalPages; }
+        function changePage(d) { currentPage+=d; if(currentPage<1)currentPage=1; if(currentPage>totalPages)currentPage=totalPages; loadTickets(); }
+        function toggleTicketSelection(id) { selectedTickets.has(id)?selectedTickets.delete(id):selectedTickets.add(id); updateBulkActions(); }
+        function toggleSelectAll() { const c=document.getElementById('selectAll').checked; ticketsData.forEach(t=>{if(!t.callbackSent){c?selectedTickets.add(t.id):selectedTickets.delete(t.id);}}); renderTickets(ticketsData); }
+        function clearSelection() { selectedTickets.clear(); document.getElementById('selectAll').checked=false; renderTickets(ticketsData); }
+        function updateBulkActions() { const b=document.getElementById('bulkActions'),c=selectedTickets.size; c>0?(b.classList.add('active'),document.getElementById('selectedCount').textContent=`${c} selected`):b.classList.remove('active'); }
+        function openCallbackModal(id) { document.getElementById('callbackTicketId').value=id; document.getElementById('callbackReason').value=''; document.getElementById('callbackModal').classList.add('active'); }
+        function closeCallbackModal() { document.getElementById('callbackModal').classList.remove('active'); }
+        async function sendCallback(action) {
+            const id=document.getElementById('callbackTicketId').value,reason=document.getElementById('callbackReason').value;
+            try { const r=await fetch(`${getApiUrl()}/api/monitor/callback`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticketId:id,action,reason})}); const d=await r.json(); if(d.success){showToast(`${action} sent!`,'success');closeCallbackModal();loadData();}else{showToast(`Failed: ${d.error}`,'error');} } catch(e){showToast(`Error: ${e.message}`,'error');}
+        }
+        async function sendBulkCallback(action) {
+            if(!selectedTickets.size)return; if(!confirm(`Send ${action} to ${selectedTickets.size} tickets?`))return;
+            try { const r=await fetch(`${getApiUrl()}/api/monitor/callback/bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticketIds:Array.from(selectedTickets),action})}); const d=await r.json(); showToast(`${d.successful} success, ${d.failed} failed`,d.failed>0?'warning':'success'); clearSelection(); loadData(); } catch(e){showToast(`Error: ${e.message}`,'error');}
+        }
+        async function showTicketDetails(id) {
+            try { const r=await fetch(`${getApiUrl()}/api/monitor/tickets/${id}`); const t=await r.json();
+            document.getElementById('modalBody').innerHTML=`
+                <div class="detail-row"><div class="detail-label">Ticket #</div><div class="detail-value">${t.ticketNumber||'-'}</div></div>
+                <div class="detail-row"><div class="detail-label">Subject</div><div class="detail-value">${t.subject||'-'}</div></div>
+                <div class="detail-row"><div class="detail-label">Reference</div><div class="detail-value">${t.referenceNumber||'-'}</div></div>
+                <div class="detail-row"><div class="detail-label">Company</div><div class="detail-value">${t.companyName||'-'}</div></div>
+                <div class="detail-row"><div class="detail-label">Customer</div><div class="detail-value">${t.customerName||'-'}</div></div>
+                <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value">${t.customerEmail||'-'}</div></div>
+                <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value"><span class="status-pill status-${getStatusClass(t.currentStatus)}">${getStatusLabel(t.currentStatus)}</span></div></div>
+                <div class="detail-row"><div class="detail-label">Callback</div><div class="detail-value">${t.callbackSent?`${t.callbackAction} at ${new Date(t.callbackSentAt).toLocaleString()}`:'Pending'}</div></div>
+                ${!t.callbackSent?`<div class="action-buttons"><button class="btn btn-success" onclick="closeModal();openCallbackModal('${t.id}')">Send Callback</button></div>`:''}`;
+            document.getElementById('ticketModal').classList.add('active'); } catch(e){alert(e.message);}
+        }
+        function closeModal() { document.getElementById('ticketModal').classList.remove('active'); }
+        function toggleAutoRefresh() { const t=document.getElementById('autoRefreshToggle'); if(autoRefreshInterval){clearInterval(autoRefreshInterval);autoRefreshInterval=null;t.classList.remove('active');}else{autoRefreshInterval=setInterval(loadData,10000);t.classList.add('active');} }
+        function showToast(msg,type='success') { const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast ${type} active`; setTimeout(()=>t.classList.remove('active'),3000); }
+        document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('active');}));
+        document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal').forEach(m=>m.classList.remove('active'));});
+    </script>
+</body>
+</html>

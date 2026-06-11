@@ -1,0 +1,83 @@
+2026-06-11 02:05:26.066 +03:00 [INF] Starting Etisalat SaaS Callback Service...
+2026-06-11 02:05:26.233 +03:00 [INF] TicketMonitorService initialized. Monitoring Ticket for subscription tickets
+2026-06-11 02:05:26.280 +03:00 [INF] Ensuring tracked_tickets collection and indexes exist...
+2026-06-11 02:05:26.296 +03:00 [WRN] The WebRootPath was not found: D:\RD\Projects\EtisalatSaasCallback\wwwroot. Static files may be unavailable.
+2026-06-11 02:05:26.411 +03:00 [INF] tracked_tickets collection indexes ensured
+2026-06-11 02:05:26.411 +03:00 [INF] TicketMonitorService started. Polling interval: 30 seconds
+2026-06-11 02:05:26.482 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:05:56.486 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:06:08.231 +03:00 [INF] HTTP POST /rest/xaas/v1/sendCallback responded 401 in 31.3661 ms
+2026-06-11 02:06:20.298 +03:00 [INF] HTTP POST /rest/xaas/v1/sendCallback responded 401 in 4.2451 ms
+2026-06-11 02:06:26.505 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:06:34.463 +03:00 [INF] HTTP POST /rest/xaas/v1/sendCallback responded 401 in 2.1558 ms
+2026-06-11 02:06:56.514 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:07:26.519 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:07:33.164 +03:00 [INF] Starting Etisalat SaaS Callback Service...
+2026-06-11 02:07:33.296 +03:00 [INF] TicketMonitorService initialized. Monitoring Ticket for subscription tickets
+2026-06-11 02:07:33.322 +03:00 [INF] Ensuring tracked_tickets collection and indexes exist...
+2026-06-11 02:07:33.335 +03:00 [WRN] The WebRootPath was not found: D:\RD\Projects\EtisalatSaasCallback\wwwroot. Static files may be unavailable.
+2026-06-11 02:07:33.408 +03:00 [INF] tracked_tickets collection indexes ensured
+2026-06-11 02:07:33.408 +03:00 [INF] TicketMonitorService started. Polling interval: 30 seconds
+2026-06-11 02:07:33.473 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:08:03.488 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:08:33.495 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:08:45.295 +03:00 [INF] Authentication successful for user: isv_user
+2026-06-11 02:08:45.297 +03:00 [DBG] AuthenticationScheme: BasicAuth was successfully authenticated.
+2026-06-11 02:08:45.426 +03:00 [INF] Sending outbound callback. Reference: REF-TEST-001, Action: ACCEPTED
+2026-06-11 02:08:45.495 +03:00 [INF] Created provisioning record for reference: REF-TEST-001
+2026-06-11 02:08:45.495 +03:00 [INF] Sending provisioning status callback to https://contentapi-s.etisalat.ae/rest/xaas/v1/isvProvisioningStatus. Reference: REF-TEST-001, Action: ACCEPTED, Body: {"isvProvisioningStatusRequest":{"referenceNumber":"REF-TEST-001","subscriptionId":"SUB-TEST-001","billingDate":"20260610230000","action":"ACCEPTED","serviceAttribute":null}}
+2026-06-11 02:09:03.505 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:09:15.513 +03:00 [ERR] Timeout sending callback for reference: REF-TEST-001
+System.Threading.Tasks.TaskCanceledException: The request was canceled due to the configured HttpClient.Timeout of 30 seconds elapsing.
+ ---> System.TimeoutException: A task was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: A task was canceled.
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.PolicyHttpMessageHandler.SendCoreAsync(HttpRequestMessage request, Context context, CancellationToken cancellationToken)
+   at Polly.Retry.AsyncRetryEngine.ImplementationAsync[TResult](Func`3 action, Context context, CancellationToken cancellationToken, ExceptionPredicates shouldRetryExceptionPredicates, ResultPredicates`1 shouldRetryResultPredicates, Func`5 onRetryAsync, Int32 permittedRetryCount, IEnumerable`1 sleepDurationsEnumerable, Func`4 sleepDurationProvider, Boolean continueOnCapturedContext)
+   at Polly.AsyncPolicy`1.ExecuteAsync(Func`3 action, Context context, CancellationToken cancellationToken, Boolean continueOnCapturedContext)
+   at Microsoft.Extensions.Http.PolicyHttpMessageHandler.SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at EtisalatSaasCallback.Services.EtisalatCallbackClient.SendProvisioningStatusAsync(IsvProvisioningStatusRequest request) in D:\RD\Projects\EtisalatSaasCallback\Services\EtisalatCallbackClient.cs:line 89
+2026-06-11 02:09:15.532 +03:00 [INF] Updated provisioning record: 6a29ee7dd132395fa74be1e7
+2026-06-11 02:09:15.550 +03:00 [INF] HTTP POST /rest/xaas/v1/sendCallback responded 200 in 30273.9345 ms
+2026-06-11 02:09:33.518 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:10:03.539 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:10:33.564 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:11:03.575 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:11:33.584 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:12:03.588 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:12:33.596 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:13:03.615 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:13:33.635 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:14:03.651 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:14:33.668 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:15:03.674 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:15:33.690 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:16:03.701 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:16:33.720 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:17:03.730 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:17:33.735 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:18:03.739 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:18:33.758 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:19:03.773 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:19:33.783 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:20:03.795 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:20:33.813 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:21:03.832 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:21:33.837 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:22:03.856 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:22:33.866 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:23:03.880 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:23:33.885 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:24:03.893 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:24:33.907 +03:00 [DBG] Monitoring 0 tracked tickets for status changes
+2026-06-11 02:25:03.917 +03:00 [DBG] Monitoring 0 tracked tickets for status changes

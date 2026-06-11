@@ -100,11 +100,11 @@
     <table style="table-layout: fixed; width: 100%;">
         <thead>
             <tr>
-                <th style="width: 140px;">Ticket #</th>
+                <th style="width: 150px;">Ticket #</th>
                 <th>Subject</th>
-                <th style="width: 130px;">Status</th>
-                <th style="width: 100px;">Callback</th>
-                <th style="width: 170px;">Created</th>
+                <th style="width: 110px;">Status</th>
+                <th style="width: 110px;">Callback</th>
+                <th style="width: 150px; white-space: nowrap;">Created</th>
             </tr>
         </thead>
         <tbody>
@@ -145,7 +145,7 @@
                             <span class="callback-badge callback-pending">Pending</span>
                         }
                     </td>
-                    <td class="text-muted">@ticket.TicketCreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="text-muted" style="white-space: nowrap;">@ticket.TicketCreatedDate.ToString("yyyy-MM-dd HH:mm")</td>
                 </tr>
             }
         </tbody>

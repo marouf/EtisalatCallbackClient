@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj": {}
+    "d:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj": {}
   },
   "projects": {
-    "D:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj": {
+    "d:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj",
+        "projectUniqueName": "d:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj",
         "projectName": "EtisalatSaasCallback",
-        "projectPath": "D:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj",
+        "projectPath": "d:\\RD\\Projects\\EtisalatSaasCallback\\EtisalatSaasCallback.csproj",
         "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-        "outputPath": "D:\\RD\\Projects\\EtisalatSaasCallback\\obj\\",
+        "outputPath": "d:\\RD\\Projects\\EtisalatSaasCallback\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

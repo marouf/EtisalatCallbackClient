@@ -187,7 +187,8 @@ public class DashboardController : Controller
         ("Callback Sent At (UTC)", t => t.CallbackSentAt),
         ("Callback Response Code", t => t.CallbackResponseCode),
         ("Callback Response", t => t.CallbackResponseDescription),
-        ("Reason", t => t.CallbackReason),
+        ("Reason Sent", t => !string.IsNullOrWhiteSpace(t.CallbackReason) ? t.CallbackReason : t.RejectionReason),
+        ("Validation Errors", t => t.ValidationErrors != null && t.ValidationErrors.Count > 0 ? string.Join("; ", t.ValidationErrors) : null),
     };
 
     [HttpGet]

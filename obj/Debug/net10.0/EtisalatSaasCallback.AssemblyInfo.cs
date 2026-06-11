@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EtisalatSaasCallback")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2810116ef44d9f075a5d1cb1fabe0d65b6f03f8f")]
 [assembly: System.Reflection.AssemblyProductAttribute("EtisalatSaasCallback")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EtisalatSaasCallback")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

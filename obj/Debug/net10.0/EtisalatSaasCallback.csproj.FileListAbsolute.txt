@@ -56,3 +56,4 @@ D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\refint\EtisalatSaasCallbac
 D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\EtisalatSaasCallback.pdb
 D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\EtisalatSaasCallback.genruntimeconfig.cache
 D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\ref\EtisalatSaasCallback.dll
+D:\RD\Projects\EtisalatSaasCallback\obj\Debug\net10.0\EtisalatSaasCallback.sourcelink.json

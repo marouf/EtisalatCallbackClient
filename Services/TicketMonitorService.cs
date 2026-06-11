@@ -94,8 +94,25 @@ public class TicketMonitorService : BackgroundService
 
     private async Task DiscoverNewTicketsAsync(CancellationToken cancellationToken)
     {
+        var filterBuilder = Builders<Ticket>.Filter;
+        var filter = filterBuilder.Eq(t => t.IsArchived, false);
+
+        if (!string.IsNullOrEmpty(_monitorSettings.TicketCategoryId) &&
+            Guid.TryParse(_monitorSettings.TicketCategoryId, out var categoryGuid))
+        {
+            var categoryBinary = new BsonBinaryData(categoryGuid, GuidRepresentation.Standard);
+            filter &= filterBuilder.Eq("TicketCategoryId", categoryBinary);
+        }
+
+        if (!string.IsNullOrEmpty(_monitorSettings.TicketSubCategoryId) &&
+            Guid.TryParse(_monitorSettings.TicketSubCategoryId, out var subCategoryGuid))
+        {
+            var subCategoryBinary = new BsonBinaryData(subCategoryGuid, GuidRepresentation.Standard);
+            filter &= filterBuilder.Eq("TicketSubCategoryId", subCategoryBinary);
+        }
+
         var subscriptionTickets = await _ticketCollection
-            .Find(t => t.Subject.Contains(_monitorSettings.SubjectFilter) && !t.IsArchived)
+            .Find(filter)
             .ToListAsync(cancellationToken);
 
         foreach (var ticket in subscriptionTickets)
@@ -113,10 +130,12 @@ public class TicketMonitorService : BackgroundService
                 var subscriptionIdFromSubject = ExtractSubscriptionIdFromSubject(ticket.Subject);
                 var subscriptionId = subscriptionIdFromSubject ?? subscriptionIdFromBody;
 
+                var (isValid, validationErrors) = ValidateTicketPayload(referenceNumber, subscriptionId, accountId);
+
                 var trackedTicket = new TrackedTicket
                 {
                     Id = ObjectId.GenerateNewId().ToString(),
-                    TicketId = ticketIdString,  // Stored as GUID string for reliable lookup
+                    TicketId = ticketIdString,
                     TicketNumber = ticket.TicketNumber,
                     Subject = ticket.Subject,
                     ReferenceNumber = referenceNumber,
@@ -133,16 +152,37 @@ public class TicketMonitorService : BackgroundService
                     TrackedAt = DateTime.UtcNow,
                     LastCheckedAt = DateTime.UtcNow,
                     TicketCreatedDate = ticket.CreatedDate,
-                    TicketModifiedDate = ticket.ModifiedDate
+                    TicketModifiedDate = ticket.ModifiedDate,
+                    IsValidPayload = isValid,
+                    ValidationErrors = validationErrors
                 };
 
                 await _trackedCollection.InsertOneAsync(trackedTicket, cancellationToken: cancellationToken);
 
                 _logger.LogInformation(
-                    "New ticket tracked: {TicketNumber} - {Subject}, Status: {Status}, Reference: {Reference}",
-                    ticket.TicketNumber, ticket.Subject, ticket.Status, referenceNumber ?? "N/A");
+                    "New ticket tracked: {TicketNumber} - {Subject}, Status: {Status}, Reference: {Reference}, Valid: {IsValid}",
+                    ticket.TicketNumber, ticket.Subject, ticket.Status, referenceNumber ?? "N/A", isValid);
+
+                if (!isValid)
+                {
+                    await SendRejectedCallbackAsync(trackedTicket, "Request is invalid", cancellationToken);
+                }
             }
         }
+    }
+
+    private (bool isValid, List<string>? errors) ValidateTicketPayload(
+        string? referenceNumber, string? subscriptionId, string? accountId)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(referenceNumber))
+            errors.Add("Missing Reference Number");
+
+        if (string.IsNullOrWhiteSpace(subscriptionId) && string.IsNullOrWhiteSpace(accountId))
+            errors.Add("Missing Subscription ID and Account ID");
+
+        return (errors.Count == 0, errors.Count > 0 ? errors : null);
     }
 
     private async Task MonitorTrackedTicketsAsync(CancellationToken cancellationToken)
@@ -190,11 +230,6 @@ public class TicketMonitorService : BackgroundService
                 t => t.Id == trackedTicket.Id,
                 updateDef,
                 cancellationToken: cancellationToken);
-
-            if (currentTicket.Status == TicketStatus.Closed && !trackedTicket.CallbackSent)
-            {
-                await SendEtisalatCallbackAsync(trackedTicket, currentTicket, cancellationToken);
-            }
         }
     }
 
@@ -321,6 +356,61 @@ public class TicketMonitorService : BackgroundService
         {
             _logger.LogWarning(
                 "Callback response for ticket {TicketNumber}. Code: {Code}, Description: {Description}",
+                trackedTicket.TicketNumber, response.ResponseCode, response.Description);
+        }
+    }
+
+    private async Task SendRejectedCallbackAsync(
+        TrackedTicket trackedTicket,
+        string rejectionReason,
+        CancellationToken cancellationToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var etisalatClient = scope.ServiceProvider.GetRequiredService<IEtisalatCallbackClient>();
+
+        var request = new IsvProvisioningStatusRequest
+        {
+            ReferenceNumber = trackedTicket.ReferenceNumber ?? trackedTicket.TicketNumber,
+            SubscriptionId = trackedTicket.SubscriptionId ?? trackedTicket.AccountId ?? trackedTicket.TicketNumber,
+            Action = ProvisioningAction.Rejected,
+            BillingDate = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
+            ServiceAttribute = new List<ServiceAttribute>
+            {
+                new() { Name = "ticketNumber", Value = trackedTicket.TicketNumber },
+                new() { Name = "rejectionReason", Value = rejectionReason },
+                new() { Name = "validationErrors", Value = string.Join("; ", trackedTicket.ValidationErrors ?? new List<string>()) }
+            }
+        };
+
+        _logger.LogInformation(
+            "Sending REJECTED callback to Etisalat. Ticket: {TicketNumber}, Reason: {Reason}",
+            trackedTicket.TicketNumber, rejectionReason);
+
+        var response = await etisalatClient.SendProvisioningStatusAsync(request);
+
+        var updateDef = Builders<TrackedTicket>.Update
+            .Set(t => t.CallbackSent, true)
+            .Set(t => t.CallbackSentAt, DateTime.UtcNow)
+            .Set(t => t.CallbackAction, ProvisioningAction.Rejected)
+            .Set(t => t.RejectionReason, rejectionReason)
+            .Set(t => t.CallbackResponseCode, response.ResponseCode)
+            .Set(t => t.CallbackResponseDescription, response.Description);
+
+        await _trackedCollection.UpdateOneAsync(
+            t => t.Id == trackedTicket.Id,
+            updateDef,
+            cancellationToken: cancellationToken);
+
+        if (response.ResponseCode == ErrorCodes.Success)
+        {
+            _logger.LogInformation(
+                "Successfully sent REJECTED callback for ticket {TicketNumber}",
+                trackedTicket.TicketNumber);
+        }
+        else
+        {
+            _logger.LogWarning(
+                "REJECTED callback response for ticket {TicketNumber}. Code: {Code}, Description: {Description}",
                 trackedTicket.TicketNumber, response.ResponseCode, response.Description);
         }
     }

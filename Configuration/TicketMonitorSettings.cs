@@ -15,4 +15,8 @@ public class TicketMonitorSettings
     public int PollingIntervalSeconds { get; set; } = 30;
 
     public string SubjectFilter { get; set; } = "Subscription";
+
+    public string? TicketCategoryId { get; set; }
+
+    public string? TicketSubCategoryId { get; set; }
 }

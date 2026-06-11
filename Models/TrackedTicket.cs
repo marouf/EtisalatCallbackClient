@@ -83,4 +83,13 @@ public class TrackedTicket
 
     [BsonElement("ticketModifiedDate")]
     public DateTime? TicketModifiedDate { get; set; }
+
+    [BsonElement("isValidPayload")]
+    public bool IsValidPayload { get; set; } = true;
+
+    [BsonElement("validationErrors")]
+    public List<string>? ValidationErrors { get; set; }
+
+    [BsonElement("rejectionReason")]
+    public string? RejectionReason { get; set; }
 }

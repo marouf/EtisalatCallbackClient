@@ -4,6 +4,11 @@
 }
 
 <style>
+    /* Use the full window width on this page and scroll on small screens */
+    .container { max-width: 100%; }
+    .table-container { overflow-x: auto; }
+    .table-container table { min-width: 1000px; }
+
     .table-container td { vertical-align: top; }
     th .sort-link {
         color: inherit;
@@ -138,7 +143,7 @@
                     <th style="width: 44px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" /></th>
                     <th style="width: 120px;"><a href="@sortUrl("ticket")" class="sort-link">Ticket # <span class="sort-arrow">@sortArrow("ticket")</span></a></th>
                     <th><a href="@sortUrl("subject")" class="sort-link">Subject <span class="sort-arrow">@sortArrow("subject")</span></a></th>
-                    <th style="width: 150px;"><a href="@sortUrl("reference")" class="sort-link">Reference No. <span class="sort-arrow">@sortArrow("reference")</span></a></th>
+                    <th style="width: 180px;"><a href="@sortUrl("reference")" class="sort-link">Reference No. <span class="sort-arrow">@sortArrow("reference")</span></a></th>
                     <th style="width: 150px;"><a href="@sortUrl("created")" class="sort-link">Created <span class="sort-arrow">@sortArrow("created")</span></a></th>
                     <th style="width: 110px;"><a href="@sortUrl("status")" class="sort-link">Status <span class="sort-arrow">@sortArrow("status")</span></a></th>
                     <th style="width: 105px;"><a href="@sortUrl("callback")" class="sort-link">Callback <span class="sort-arrow">@sortArrow("callback")</span></a></th>
@@ -176,7 +181,7 @@
                         <td style="word-break: break-word; vertical-align: top;">
                             @ticket.Subject
                         </td>
-                        <td style="word-break: break-word; vertical-align: top; color: var(--text-muted);">
+                        <td style="white-space: nowrap; vertical-align: top; color: var(--text-muted);">
                             @(ticket.ReferenceNumber ?? "—")
                         </td>
                         <td class="text-muted" style="white-space: nowrap;">

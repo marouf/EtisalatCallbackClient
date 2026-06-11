@@ -63,15 +63,17 @@ public class DashboardController : Controller
     }
 
     public async Task<IActionResult> Monitor(int page = 1, string? status = null, string? callback = null, string? search = null,
-        string? dateRange = null, string? dateFrom = null, string? dateTo = null)
+        string? dateRange = null, string? dateFrom = null, string? dateTo = null, string? sort = null, string? dir = null)
     {
         const int pageSize = 20;
         var filter = BuildTicketFilter(status, callback, search, dateRange, dateFrom, dateTo);
 
+        var sortDef = BuildSort(sort, dir);
+
         var totalCount = await _trackedCollection.CountDocumentsAsync(filter);
         var tickets = await _trackedCollection
             .Find(filter)
-            .SortByDescending(t => t.TrackedAt)
+            .Sort(sortDef)
             .Skip((page - 1) * pageSize)
             .Limit(pageSize)
             .ToListAsync();
@@ -85,8 +87,27 @@ public class DashboardController : Controller
         ViewBag.DateRange = dateRange;
         ViewBag.DateFrom = dateFrom;
         ViewBag.DateTo = dateTo;
+        ViewBag.Sort = sort;
+        ViewBag.Dir = dir;
 
         return View(tickets);
+    }
+
+    private static SortDefinition<TrackedTicket> BuildSort(string? sort, string? dir)
+    {
+        var sortBuilder = Builders<TrackedTicket>.Sort;
+        var ascending = string.Equals(dir, "asc", StringComparison.OrdinalIgnoreCase);
+
+        return sort switch
+        {
+            "ticket" => ascending ? sortBuilder.Ascending(t => t.TicketNumber) : sortBuilder.Descending(t => t.TicketNumber),
+            "subject" => ascending ? sortBuilder.Ascending(t => t.Subject) : sortBuilder.Descending(t => t.Subject),
+            "reference" => ascending ? sortBuilder.Ascending(t => t.ReferenceNumber) : sortBuilder.Descending(t => t.ReferenceNumber),
+            "status" => ascending ? sortBuilder.Ascending(t => t.CurrentStatus) : sortBuilder.Descending(t => t.CurrentStatus),
+            "callback" => ascending ? sortBuilder.Ascending(t => t.CallbackSent) : sortBuilder.Descending(t => t.CallbackSent),
+            "created" => ascending ? sortBuilder.Ascending(t => t.TicketCreatedDate) : sortBuilder.Descending(t => t.TicketCreatedDate),
+            _ => sortBuilder.Descending(t => t.TrackedAt)
+        };
     }
 
     private static FilterDefinition<TrackedTicket> BuildTicketFilter(

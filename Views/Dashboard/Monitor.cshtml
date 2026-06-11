@@ -102,16 +102,34 @@
         <button type="button" class="btn btn-ghost btn-sm" onclick="clearSelection()">Clear</button>
     </div>
 
+    @{
+        string currentSort = ViewBag.Sort as string ?? "";
+        string currentDir = ViewBag.Dir as string ?? "";
+        Func<string, string> sortUrl = field => Url.Action("Monitor", new
+        {
+            sort = field,
+            dir = (currentSort == field && currentDir == "asc") ? "desc" : "asc",
+            status = ViewBag.StatusFilter,
+            callback = ViewBag.CallbackFilter,
+            search = ViewBag.SearchFilter,
+            dateRange = ViewBag.DateRange,
+            dateFrom = ViewBag.DateFrom,
+            dateTo = ViewBag.DateTo
+        })!;
+        Func<string, string> sortArrow = field => currentSort == field ? (currentDir == "asc" ? "▲" : "▼") : "⇅";
+    }
+
     <div class="table-container">
         <table style="table-layout: fixed; width: 100%;">
             <thead>
                 <tr>
-                    <th style="width: 50px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" /></th>
-                    <th style="width: 130px;">Ticket #</th>
-                    <th style="width: 35%;">Subject</th>
-                    <th style="width: 18%;">Reference No.</th>
-                    <th style="width: 110px;">Status</th>
-                    <th style="width: 100px;">Callback</th>
+                    <th style="width: 44px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()" /></th>
+                    <th style="width: 120px;"><a href="@sortUrl("ticket")" class="sort-link">Ticket # <span class="sort-arrow">@sortArrow("ticket")</span></a></th>
+                    <th><a href="@sortUrl("subject")" class="sort-link">Subject <span class="sort-arrow">@sortArrow("subject")</span></a></th>
+                    <th style="width: 150px;"><a href="@sortUrl("reference")" class="sort-link">Reference No. <span class="sort-arrow">@sortArrow("reference")</span></a></th>
+                    <th style="width: 110px;"><a href="@sortUrl("status")" class="sort-link">Status <span class="sort-arrow">@sortArrow("status")</span></a></th>
+                    <th style="width: 105px;"><a href="@sortUrl("callback")" class="sort-link">Callback <span class="sort-arrow">@sortArrow("callback")</span></a></th>
+                    <th style="width: 150px;"><a href="@sortUrl("created")" class="sort-link">Created <span class="sort-arrow">@sortArrow("created")</span></a></th>
                     <th style="width: 90px;">Actions</th>
                 </tr>
             </thead>

@@ -30,6 +30,26 @@
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
     <div>
+        @if (!Model.IsValidPayload)
+        {
+            <div class="alert alert-danger mb-4" style="align-items: flex-start;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:2px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">Invalid Payload — Auto-Rejected</div>
+                    <div style="font-size: 13px;">
+                        This ticket did not contain a valid request payload, so a <strong>REJECTED</strong> callback was sent automatically.
+                        @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                        {
+                            <span>Reason: <strong>@Model.RejectionReason</strong>.</span>
+                        }
+                        @if (Model.ValidationErrors != null && Model.ValidationErrors.Count > 0)
+                        {
+                            <div style="margin-top: 6px;">Validation errors: @string.Join("; ", Model.ValidationErrors)</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
         <div class="card mb-4">
             <div class="card-header">
                 <span>Ticket Information</span>
@@ -193,8 +213,15 @@
                     </div>
                     <div class="detail-item mb-3">
                         <label>Reason Sent</label>
-                        <div class="value">@(string.IsNullOrWhiteSpace(Model.CallbackReason) ? "—" : Model.CallbackReason)</div>
+                        <div class="value">@(!string.IsNullOrWhiteSpace(Model.CallbackReason) ? Model.CallbackReason : (string.IsNullOrWhiteSpace(Model.RejectionReason) ? "—" : Model.RejectionReason))</div>
                     </div>
+                    @if (Model.ValidationErrors != null && Model.ValidationErrors.Count > 0)
+                    {
+                        <div class="detail-item mb-3">
+                            <label>Validation Errors Sent</label>
+                            <div class="value">@string.Join("; ", Model.ValidationErrors)</div>
+                        </div>
+                    }
 
                     @if (callbackFailed)
                     {

@@ -3,6 +3,10 @@
     ViewData["Title"] = "Ticket Monitor";
 }
 
+<style>
+    .table-container td { vertical-align: top; }
+</style>
+
 <div class="page-header">
     <div>
         <h1 class="page-title">Ticket Monitor</h1>
@@ -139,10 +143,10 @@
                                 @ticket.TicketNumber
                             </a>
                         </td>
-                        <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@ticket.Subject">
+                        <td style="word-break: break-word; vertical-align: top;">
                             @ticket.Subject
                         </td>
-                        <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);">
+                        <td style="word-break: break-word; vertical-align: top; color: var(--text-muted);">
                             @(ticket.ReferenceNumber ?? "—")
                         </td>
                         <td>

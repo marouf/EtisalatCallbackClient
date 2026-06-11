@@ -104,7 +104,7 @@
                 <th>Subject</th>
                 <th style="width: 110px;">Status</th>
                 <th style="width: 110px;">Callback</th>
-                <th style="width: 150px; white-space: nowrap;">Created</th>
+                <th style="width: 175px;">Created</th>
             </tr>
         </thead>
         <tbody>
@@ -127,7 +127,7 @@
                     <td>
                         <a asp-action="TicketDetails" asp-route-id="@ticket.Id" class="link" style="font-weight: 500;">@ticket.TicketNumber</a>
                     </td>
-                    <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@ticket.Subject">@ticket.Subject</td>
+                    <td style="word-break: break-word; vertical-align: top;">@ticket.Subject</td>
                     <td>
                         <span class="status-pill status-@ticket.CurrentStatus.ToString().ToLower()">@ticket.CurrentStatus</span>
                     </td>
@@ -176,4 +176,6 @@
         cursor: pointer;
     }
     a.stat-card .trend { font-size: 12px; font-weight: 600; }
+
+    .table-container td { vertical-align: top; }
 </style>

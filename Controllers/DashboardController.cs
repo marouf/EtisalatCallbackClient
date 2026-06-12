@@ -326,10 +326,12 @@ public class DashboardController : Controller
         foreach (var ticket in tickets)
         {
             var rule = GetApplicableSlaRule(ticket);
-            var slaDeadline = ticket.TrackedAt.AddDays(rule.SlaDays);
-            var warningDate = ticket.TrackedAt.AddDays(rule.WarningDays);
+            // SLA runs from when the subscription request was created, not when we first tracked it.
+            var slaStart = ticket.TicketCreatedDate != default ? ticket.TicketCreatedDate : ticket.TrackedAt;
+            var slaDeadline = slaStart.AddDays(rule.SlaDays);
+            var warningDate = slaStart.AddDays(rule.WarningDays);
             var daysRemaining = (slaDeadline - now).TotalDays;
-            var daysElapsed = (now - ticket.TrackedAt).TotalDays;
+            var daysElapsed = (now - slaStart).TotalDays;
 
             string violationStatus;
             if (now > slaDeadline)

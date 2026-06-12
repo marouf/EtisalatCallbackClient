@@ -342,16 +342,7 @@ public class TicketMonitorService : BackgroundService
             SubscriptionId = trackedTicket.SubscriptionId ?? trackedTicket.AccountId ?? trackedTicket.TicketNumber,
             Action = ProvisioningAction.Accepted,
             BillingDate = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
-            ServiceAttribute = new List<ServiceAttribute>
-            {
-                new() { Name = "ticketNumber", Value = trackedTicket.TicketNumber },
-                new() { Name = "closedDate", Value = (currentTicket.ModifiedDate ?? DateTime.UtcNow).ToString("yyyy-MM-dd HH:mm:ss") },
-                new() { Name = "customerName", Value = trackedTicket.CustomerName ?? "" },
-                new() { Name = "companyName", Value = trackedTicket.CompanyName ?? "" },
-                new() { Name = "product", Value = trackedTicket.Product ?? "" },
-                new() { Name = "planId", Value = trackedTicket.PlanId ?? "" },
-                new() { Name = "accountId", Value = trackedTicket.AccountId ?? "" }
-            }
+            ServiceAttribute = new List<ServiceAttribute>()
         };
 
         _logger.LogInformation(
@@ -400,12 +391,7 @@ public class TicketMonitorService : BackgroundService
             SubscriptionId = trackedTicket.SubscriptionId ?? trackedTicket.AccountId ?? trackedTicket.TicketNumber,
             Action = ProvisioningAction.Rejected,
             BillingDate = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
-            ServiceAttribute = new List<ServiceAttribute>
-            {
-                new() { Name = "ticketNumber", Value = trackedTicket.TicketNumber },
-                new() { Name = "rejectionReason", Value = rejectionReason },
-                new() { Name = "validationErrors", Value = string.Join("; ", trackedTicket.ValidationErrors ?? new List<string>()) }
-            }
+            ServiceAttribute = new List<ServiceAttribute>()
         };
 
         _logger.LogInformation(

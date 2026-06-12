@@ -185,12 +185,7 @@ public class MonitorController : ControllerBase
                 SubscriptionId = ticket.SubscriptionId ?? ticket.AccountId ?? ticket.TicketNumber,
                 Action = action,
                 BillingDate = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
-                ServiceAttribute = new List<ServiceAttribute>
-                {
-                    new() { Name = "ticketNumber", Value = ticket.TicketNumber },
-                    new() { Name = "manualAction", Value = "true" },
-                    new() { Name = "reason", Value = reason ?? "" }
-                }
+                ServiceAttribute = new List<ServiceAttribute>()
             };
 
             _logger.LogInformation(

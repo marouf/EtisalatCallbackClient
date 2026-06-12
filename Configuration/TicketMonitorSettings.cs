@@ -16,6 +16,17 @@ public class TicketMonitorSettings
 
     public string SubjectFilter { get; set; } = "Subscription";
 
+    // Legacy single pair (still supported). Prefer the Categories list below.
+    public string? TicketCategoryId { get; set; }
+
+    public string? TicketSubCategoryId { get; set; }
+
+    // List of category/sub-category pairs to monitor. A ticket matching ANY pair is tracked.
+    public List<CategoryPair> Categories { get; set; } = new();
+}
+
+public class CategoryPair
+{
     public string? TicketCategoryId { get; set; }
 
     public string? TicketSubCategoryId { get; set; }

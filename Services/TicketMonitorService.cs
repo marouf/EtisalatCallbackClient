@@ -97,19 +97,45 @@ public class TicketMonitorService : BackgroundService
         var filterBuilder = Builders<Ticket>.Filter;
         var filter = filterBuilder.Eq(t => t.IsArchived, false);
 
-        if (!string.IsNullOrEmpty(_monitorSettings.TicketCategoryId) &&
-            Guid.TryParse(_monitorSettings.TicketCategoryId, out var categoryGuid))
+        // Collect all configured category/sub-category pairs: the legacy single pair plus the Categories list.
+        var pairs = new List<CategoryPair>();
+        if (!string.IsNullOrEmpty(_monitorSettings.TicketCategoryId) ||
+            !string.IsNullOrEmpty(_monitorSettings.TicketSubCategoryId))
         {
-            var categoryBinary = new BsonBinaryData(categoryGuid, GuidRepresentation.Standard);
-            filter &= filterBuilder.Eq("TicketCategoryId", categoryBinary);
+            pairs.Add(new CategoryPair
+            {
+                TicketCategoryId = _monitorSettings.TicketCategoryId,
+                TicketSubCategoryId = _monitorSettings.TicketSubCategoryId
+            });
+        }
+        pairs.AddRange(_monitorSettings.Categories);
+
+        var pairFilters = new List<FilterDefinition<Ticket>>();
+        foreach (var pair in pairs)
+        {
+            var parts = new List<FilterDefinition<Ticket>>();
+
+            if (!string.IsNullOrEmpty(pair.TicketCategoryId) &&
+                Guid.TryParse(pair.TicketCategoryId, out var categoryGuid))
+            {
+                var categoryBinary = new BsonBinaryData(categoryGuid, GuidRepresentation.Standard);
+                parts.Add(filterBuilder.Eq("TicketCategoryId", categoryBinary));
+            }
+
+            if (!string.IsNullOrEmpty(pair.TicketSubCategoryId) &&
+                Guid.TryParse(pair.TicketSubCategoryId, out var subCategoryGuid))
+            {
+                var subCategoryBinary = new BsonBinaryData(subCategoryGuid, GuidRepresentation.Standard);
+                parts.Add(filterBuilder.Eq("TicketSubCategoryId", subCategoryBinary));
+            }
+
+            if (parts.Count > 0)
+                pairFilters.Add(filterBuilder.And(parts));
         }
 
-        if (!string.IsNullOrEmpty(_monitorSettings.TicketSubCategoryId) &&
-            Guid.TryParse(_monitorSettings.TicketSubCategoryId, out var subCategoryGuid))
-        {
-            var subCategoryBinary = new BsonBinaryData(subCategoryGuid, GuidRepresentation.Standard);
-            filter &= filterBuilder.Eq("TicketSubCategoryId", subCategoryBinary);
-        }
+        // Match a ticket if it satisfies ANY configured pair.
+        if (pairFilters.Count > 0)
+            filter &= filterBuilder.Or(pairFilters);
 
         var subscriptionTickets = await _ticketCollection
             .Find(filter)

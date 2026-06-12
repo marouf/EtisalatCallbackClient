@@ -365,6 +365,7 @@ public class DashboardController : Controller
             "subject" => ascending ? violations.OrderBy(v => v.Ticket.Subject) : violations.OrderByDescending(v => v.Ticket.Subject),
             "reference" => ascending ? violations.OrderBy(v => v.Ticket.ReferenceNumber) : violations.OrderByDescending(v => v.Ticket.ReferenceNumber),
             "status" => ascending ? violations.OrderBy(v => v.Ticket.CurrentStatus) : violations.OrderByDescending(v => v.Ticket.CurrentStatus),
+            "created" => ascending ? violations.OrderBy(v => v.Ticket.TicketCreatedDate) : violations.OrderByDescending(v => v.Ticket.TicketCreatedDate),
             "rule" => ascending ? violations.OrderBy(v => v.AppliedRule) : violations.OrderByDescending(v => v.AppliedRule),
             "elapsed" => ascending ? violations.OrderBy(v => v.DaysElapsed) : violations.OrderByDescending(v => v.DaysElapsed),
             "remaining" => ascending ? violations.OrderBy(v => v.DaysRemaining) : violations.OrderByDescending(v => v.DaysRemaining),

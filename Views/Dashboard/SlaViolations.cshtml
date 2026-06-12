@@ -113,7 +113,7 @@
             <tr>
                 <th style="width: 130px;"><a href="@sortUrl("ticket")" class="sort-link">Ticket # <span class="sort-arrow">@sortArrow("ticket")</span></a></th>
                 <th><a href="@sortUrl("subject")" class="sort-link">Subject <span class="sort-arrow">@sortArrow("subject")</span></a></th>
-                <th style="width: 180px;"><a href="@sortUrl("reference")" class="sort-link">Reference No. <span class="sort-arrow">@sortArrow("reference")</span></a></th>
+                <th style="width: 290px;"><a href="@sortUrl("reference")" class="sort-link">Reference No. <span class="sort-arrow">@sortArrow("reference")</span></a></th>
                 <th style="width: 110px;"><a href="@sortUrl("status")" class="sort-link">Status <span class="sort-arrow">@sortArrow("status")</span></a></th>
                 <th style="width: 100px;"><a href="@sortUrl("rule")" class="sort-link">SLA Rule <span class="sort-arrow">@sortArrow("rule")</span></a></th>
                 <th style="width: 140px;"><a href="@sortUrl("elapsed")" class="sort-link">Progress <span class="sort-arrow">@sortArrow("elapsed")</span></a></th>
@@ -149,7 +149,7 @@
                     <td style="word-break: break-word; vertical-align: top;">
                         @item.Ticket.Subject
                     </td>
-                    <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: top; color: var(--text-muted);" title="@item.Ticket.ReferenceNumber">@(item.Ticket.ReferenceNumber ?? "—")</td>
+                    <td style="white-space: nowrap; vertical-align: top; color: var(--text-muted);">@(item.Ticket.ReferenceNumber ?? "—")</td>
                     <td>
                         <span class="status-pill status-@item.Ticket.CurrentStatus.ToString().ToLower()">
                             @item.Ticket.CurrentStatus

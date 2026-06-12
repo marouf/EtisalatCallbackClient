@@ -181,7 +181,7 @@
                         <td style="word-break: break-word; vertical-align: top;">
                             @ticket.Subject
                         </td>
-                        <td style="white-space: nowrap; vertical-align: top; color: var(--text-muted);">
+                        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: top; color: var(--text-muted);" title="@ticket.ReferenceNumber">
                             @(ticket.ReferenceNumber ?? "—")
                         </td>
                         <td class="text-muted" style="white-space: nowrap;">

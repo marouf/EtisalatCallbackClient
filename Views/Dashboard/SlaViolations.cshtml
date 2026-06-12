@@ -149,7 +149,7 @@
                     <td style="word-break: break-word; vertical-align: top;">
                         @item.Ticket.Subject
                     </td>
-                    <td style="white-space: nowrap; vertical-align: top; color: var(--text-muted);">@(item.Ticket.ReferenceNumber ?? "—")</td>
+                    <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: top; color: var(--text-muted);" title="@item.Ticket.ReferenceNumber">@(item.Ticket.ReferenceNumber ?? "—")</td>
                     <td>
                         <span class="status-pill status-@item.Ticket.CurrentStatus.ToString().ToLower()">
                             @item.Ticket.CurrentStatus

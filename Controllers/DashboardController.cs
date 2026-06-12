@@ -469,13 +469,7 @@ public class DashboardController : Controller
                 SubscriptionId = ticket.SubscriptionId ?? ticket.AccountId ?? ticket.TicketNumber,
                 Action = action,
                 BillingDate = DateTime.UtcNow.ToString("yyyyMMddHHmmss"),
-                ServiceAttribute = new List<ServiceAttribute>
-                {
-                    new() { Name = "ticketNumber", Value = ticket.TicketNumber },
-                    new() { Name = "manualAction", Value = "true" },
-                    new() { Name = "reason", Value = reason ?? "" },
-                    new() { Name = "actionBy", Value = User.Identity?.Name ?? "unknown" }
-                }
+                ServiceAttribute = new List<ServiceAttribute>()
             };
 
             var response = await etisalatClient.SendProvisioningStatusAsync(request);

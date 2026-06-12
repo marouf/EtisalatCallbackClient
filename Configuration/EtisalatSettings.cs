@@ -40,6 +40,18 @@ public class EtisalatSettings
     /// SLA in days (default 30 as per specification)
     /// </summary>
     public int SlaDays { get; set; } = 30;
+
+    /// <summary>
+    /// Service attributes sent with every callback. Empty by default — configure later in appsettings.
+    /// </summary>
+    public List<ServiceAttributeSetting> ServiceAttributes { get; set; } = new();
+}
+
+public class ServiceAttributeSetting
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string Value { get; set; } = string.Empty;
 }
 
 public class IsvSettings

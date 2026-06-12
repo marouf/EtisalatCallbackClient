@@ -55,6 +55,11 @@ public class EtisalatCallbackClient : IEtisalatCallbackClient
 
     public async Task<IsvProvisioningStatusResponse> SendProvisioningStatusAsync(IsvProvisioningStatusRequest request)
     {
+        // Service attributes are driven entirely by configuration (empty by default).
+        request.ServiceAttribute = _settings.ServiceAttributes
+            .Select(a => new ServiceAttribute { Name = a.Name, Value = a.Value })
+            .ToList();
+
         var wrapper = new IsvProvisioningStatusRequestWrapper
         {
             IsvProvisioningStatusRequest = request

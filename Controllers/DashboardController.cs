@@ -406,8 +406,18 @@ public class DashboardController : Controller
         if (ticket == null)
             return NotFound();
 
+        if (IsCallbackCompleted(ticket))
+        {
+            TempData["Warning"] = "This ticket cannot be edited — its callback was already sent successfully.";
+            return RedirectToAction("TicketDetails", new { id });
+        }
+
         return View(ticket);
     }
+
+    // A callback that succeeded (response code 0) is final and must not be edited or re-sent.
+    private static bool IsCallbackCompleted(TrackedTicket ticket) =>
+        ticket.CallbackSent && ticket.CallbackResponseCode == "0";
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
@@ -422,6 +432,12 @@ public class DashboardController : Controller
         {
             TempData["Error"] = "Ticket not found";
             return RedirectToAction("Monitor");
+        }
+
+        if (IsCallbackCompleted(ticket))
+        {
+            TempData["Warning"] = "This ticket cannot be edited — its callback was already sent successfully.";
+            return RedirectToAction("TicketDetails", new { id });
         }
 
         static string? Clean(string? v) => string.IsNullOrWhiteSpace(v) ? null : v.Trim();

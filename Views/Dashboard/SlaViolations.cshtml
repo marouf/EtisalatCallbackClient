@@ -3,7 +3,36 @@
 @{
     ViewData["Title"] = "SLA Violations";
     var rules = ViewBag.SlaRules as List<SlaRule>;
+    string currentSort = ViewBag.Sort as string ?? "";
+    string currentDir = ViewBag.Dir as string ?? "";
+    Func<string, string> sortUrl = field => Url.Action("SlaViolations", new
+    {
+        type = ViewBag.TypeFilter,
+        sort = field,
+        dir = (currentSort == field && currentDir == "asc") ? "desc" : "asc"
+    })!;
+    Func<string, string> sortArrow = field => currentSort == field ? (currentDir == "asc" ? "▲" : "▼") : "⇅";
 }
+
+<style>
+    /* Use the full window width on this page and scroll on small screens */
+    .container { max-width: 100%; }
+    .table-container { overflow-x: auto; }
+    .table-container table { min-width: 1000px; }
+    .table-container td { vertical-align: top; }
+    th .sort-link {
+        color: inherit;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    th .sort-link:hover { color: var(--primary); }
+    th .sort-arrow { font-size: 10px; opacity: 0.55; }
+    th .sort-link:hover .sort-arrow { opacity: 1; }
+</style>
 
 <div class="page-header">
     <div>
@@ -82,13 +111,13 @@
     <table style="table-layout: fixed; width: 100%;">
         <thead>
             <tr>
-                <th style="width: 120px;">Ticket #</th>
-                <th style="width: 25%;">Subject</th>
-                <th style="width: 15%;">Reference No.</th>
-                <th style="width: 100px;">Status</th>
-                <th style="width: 90px;">SLA Rule</th>
-                <th style="width: 120px;">Progress</th>
-                <th style="width: 100px;">Remaining</th>
+                <th style="width: 130px;"><a href="@sortUrl("ticket")" class="sort-link">Ticket # <span class="sort-arrow">@sortArrow("ticket")</span></a></th>
+                <th><a href="@sortUrl("subject")" class="sort-link">Subject <span class="sort-arrow">@sortArrow("subject")</span></a></th>
+                <th style="width: 180px;"><a href="@sortUrl("reference")" class="sort-link">Reference No. <span class="sort-arrow">@sortArrow("reference")</span></a></th>
+                <th style="width: 110px;"><a href="@sortUrl("status")" class="sort-link">Status <span class="sort-arrow">@sortArrow("status")</span></a></th>
+                <th style="width: 100px;"><a href="@sortUrl("rule")" class="sort-link">SLA Rule <span class="sort-arrow">@sortArrow("rule")</span></a></th>
+                <th style="width: 140px;"><a href="@sortUrl("elapsed")" class="sort-link">Progress <span class="sort-arrow">@sortArrow("elapsed")</span></a></th>
+                <th style="width: 110px;"><a href="@sortUrl("remaining")" class="sort-link">Remaining <span class="sort-arrow">@sortArrow("remaining")</span></a></th>
                 <th style="width: 90px;">Actions</th>
             </tr>
         </thead>
@@ -117,10 +146,10 @@
                             @item.Ticket.TicketNumber
                         </a>
                     </td>
-                    <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@item.Ticket.Subject">
+                    <td style="word-break: break-word; vertical-align: top;">
                         @item.Ticket.Subject
                     </td>
-                    <td style="color: var(--text-muted);">@(item.Ticket.ReferenceNumber ?? "—")</td>
+                    <td style="white-space: nowrap; vertical-align: top; color: var(--text-muted);">@(item.Ticket.ReferenceNumber ?? "—")</td>
                     <td>
                         <span class="status-pill status-@item.Ticket.CurrentStatus.ToString().ToLower()">
                             @item.Ticket.CurrentStatus
@@ -153,18 +182,21 @@
     {
         <div class="pagination">
             <a class="page-link @(ViewBag.CurrentPage <= 1 ? "disabled" : "")"
-               asp-action="SlaViolations" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-type="@ViewBag.TypeFilter">
+               asp-action="SlaViolations" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-type="@ViewBag.TypeFilter"
+               asp-route-sort="@ViewBag.Sort" asp-route-dir="@ViewBag.Dir">
                 &larr; Previous
             </a>
             @for (int i = 1; i <= ViewBag.TotalPages; i++)
             {
                 <a class="page-link @(i == ViewBag.CurrentPage ? "active" : "")"
-                   asp-action="SlaViolations" asp-route-page="@i" asp-route-type="@ViewBag.TypeFilter">
+                   asp-action="SlaViolations" asp-route-page="@i" asp-route-type="@ViewBag.TypeFilter"
+                   asp-route-sort="@ViewBag.Sort" asp-route-dir="@ViewBag.Dir">
                     @i
                 </a>
             }
             <a class="page-link @(ViewBag.CurrentPage >= ViewBag.TotalPages ? "disabled" : "")"
-               asp-action="SlaViolations" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-type="@ViewBag.TypeFilter">
+               asp-action="SlaViolations" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-type="@ViewBag.TypeFilter"
+               asp-route-sort="@ViewBag.Sort" asp-route-dir="@ViewBag.Dir">
                 Next &rarr;
             </a>
         </div>

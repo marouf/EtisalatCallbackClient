@@ -313,7 +313,7 @@ public class DashboardController : Controller
         return stream.ToArray();
     }
 
-    public async Task<IActionResult> SlaViolations(int page = 1, string? type = null)
+    public async Task<IActionResult> SlaViolations(int page = 1, string? type = null, string? sort = null, string? dir = null)
     {
         const int pageSize = 20;
         var now = DateTime.UtcNow;
@@ -358,7 +358,19 @@ public class DashboardController : Controller
             });
         }
 
-        var sortedViolations = violations.OrderBy(v => v.DaysRemaining).ToList();
+        var ascending = string.Equals(dir, "asc", StringComparison.OrdinalIgnoreCase);
+        IEnumerable<SlaViolationViewModel> ordered = sort switch
+        {
+            "ticket" => ascending ? violations.OrderBy(v => v.Ticket.TicketNumber) : violations.OrderByDescending(v => v.Ticket.TicketNumber),
+            "subject" => ascending ? violations.OrderBy(v => v.Ticket.Subject) : violations.OrderByDescending(v => v.Ticket.Subject),
+            "reference" => ascending ? violations.OrderBy(v => v.Ticket.ReferenceNumber) : violations.OrderByDescending(v => v.Ticket.ReferenceNumber),
+            "status" => ascending ? violations.OrderBy(v => v.Ticket.CurrentStatus) : violations.OrderByDescending(v => v.Ticket.CurrentStatus),
+            "rule" => ascending ? violations.OrderBy(v => v.AppliedRule) : violations.OrderByDescending(v => v.AppliedRule),
+            "elapsed" => ascending ? violations.OrderBy(v => v.DaysElapsed) : violations.OrderByDescending(v => v.DaysElapsed),
+            "remaining" => ascending ? violations.OrderBy(v => v.DaysRemaining) : violations.OrderByDescending(v => v.DaysRemaining),
+            _ => violations.OrderBy(v => v.DaysRemaining)
+        };
+        var sortedViolations = ordered.ToList();
         var totalCount = sortedViolations.Count;
         var pagedViolations = sortedViolations.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
@@ -369,6 +381,8 @@ public class DashboardController : Controller
         ViewBag.WarningCount = violations.Count(v => v.ViolationStatus == "warning");
         ViewBag.TypeFilter = type;
         ViewBag.SlaRules = _slaSettings.Rules;
+        ViewBag.Sort = sort;
+        ViewBag.Dir = dir;
 
         return View(pagedViolations);
     }
